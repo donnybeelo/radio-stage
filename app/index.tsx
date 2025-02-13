@@ -7,7 +7,6 @@ const App = () => {
 	const [recording, setRecording] = useState<Audio.Recording | null>(null);
 	const [socket, setSocket] = useState<WebSocket | null>(null);
 	const [sound, setSound] = useState<Audio.Sound | null>(null);
-	const [message, setMessage] = useState<string | null>(null);
 
 	useEffect(() => {
 		// Initialize WebSocket connection
@@ -51,7 +50,6 @@ const App = () => {
 			} catch (error) {
 				console.error("Error playing received audio:", error);
 			}
-			setMessage(event.data);
 		};
 
 		setSocket(ws);
@@ -136,7 +134,6 @@ const App = () => {
 				title={recording ? "Stop Recording" : "Start Recording"}
 				onPress={recording ? stopRecording : startRecording}
 			/>
-			{message && <Text>{message}</Text>}
 		</View>
 	);
 };
