@@ -1,203 +1,135 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Text, View, Button, Platform } from "react-native";
-import { check, request, PERMISSIONS, RESULTS } from "react-native-permissions";
+import React, { useEffect, useState } from "react";
+import { View, Button, Alert, Platform, Text } from "react-native";
+import { Audio } from "expo-av";
+import * as FileSystem from "expo-file-system";
 
-export default function Index() {
-	const [serverState, setServerState] = useState("Disconnected");
-	const ws = useRef<WebSocket | null>(null);
-	const mediaRecorder = useRef<MediaRecorder | null>(null);
-	const [buffers, setBuffers] = useState<Blob[]>([]);
-	const [isPlaying, setIsPlaying] = useState(false);
-	const [isRecording, setIsRecording] = useState(false);
-	const [audioPlaying, setAudioPlaying] = useState<HTMLAudioElement | null>(
-		null
-	);
-	const [urlQueue, setUrlQueue] = useState<string[]>([]);
-
-	const requestMicrophonePermission = async () => {
-		if (Platform.OS === "android") {
-			const result = await request(PERMISSIONS.ANDROID.RECORD_AUDIO);
-			return result === RESULTS.GRANTED;
-		} else if (Platform.OS === "ios") {
-			const result = await request(PERMISSIONS.IOS.MICROPHONE);
-			return result === RESULTS.GRANTED;
-		}
-		return true; // Assume permission is granted on web
-	};
-
-	const openWebSocket = async () => {
-		const hasPermission = await requestMicrophonePermission();
-		if (!hasPermission) {
-			setServerState("Microphone permission denied");
-			return;
-		}
-
-		ws.current = new WebSocket("ws://34.148.167.222:8080/ws");
-		ws.current.onopen = () => {
-			setServerState("Connected to the server");
-		};
-		ws.current.onclose = () => {
-			setServerState("Disconnected. Check internet or server.");
-			stopRecording();
-			ws.current = null;
-		};
-		ws.current.onerror = () => {
-			setServerState("An error occurred");
-			stopRecording();
-			ws.current = null;
-		};
-		ws.current.onmessage = (event) => {
-			handleMessage(event);
-		};
-	};
-
-	const startRecording = async () => {
-		try {
-			if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-				throw new Error("getUserMedia is not supported in this browser");
-			}
-			if (!ws.current) {
-				console.error("WebSocket connection not open");
-				return;
-			}
-			// ws.current?.send("Begin recording");
-			const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-			mediaRecorder.current = new MediaRecorder(stream);
-			mediaRecorder.current.ondataavailable = (event) => {
-				if (
-					event.data.size > 0 &&
-					ws.current &&
-					ws.current.readyState === WebSocket.OPEN
-				) {
-					ws.current.send(event.data);
-				}
-			};
-			setIsRecording(true);
-			mediaRecorder.current.start(100); // Send data in chunks every 100ms
-		} catch (error) {
-			console.error("Error accessing microphone", error);
-			setServerState("Error accessing microphone");
-		}
-	};
-
-	const stopRecording = () => {
-		if (mediaRecorder.current) {
-			// ws.current?.send("Stop recording");
-			setIsRecording(false);
-			mediaRecorder.current.stop();
-			mediaRecorder.current = null;
-		}
-	};
-
-	const handleMessage = (event: MessageEvent) => {
-		const blob = new Blob(event.data, { type: "audio/mpeg" });
-		setBuffers((prevBuffers) => [...prevBuffers, blob]);
-	};
+const App = () => {
+	const [recording, setRecording] = useState<Audio.Recording | null>(null);
+	const [socket, setSocket] = useState<WebSocket | null>(null);
+	const [sound, setSound] = useState<Audio.Sound | null>(null);
+	const [message, setMessage] = useState<string | null>(null);
 
 	useEffect(() => {
-		if (buffers.length > 0) {
-			const url = window.URL.createObjectURL(buffers[0]);
-			setUrlQueue((prevUrlQueue) => [...prevUrlQueue, url]);
-			setBuffers((prevBuffers) => prevBuffers.slice(1));
-		}
-	}, [buffers]);
+		// Initialize WebSocket connection
+		const ws = new WebSocket("ws://34.148.167.222:8080/ws");
 
-	useEffect(() => {
-		const playNAudio = async () => {
-			const nextUrl = urlQueue[0];
+		ws.onopen = () => {
+			console.log("Connected to WebSocket");
+		};
+
+		ws.onmessage = async (event) => {
 			try {
-				if (urlQueue.length) {
-					const audio = new Audio();
-					setAudioPlaying(audio);
+				// Convert base64 string directly to Blob without using Buffer
+				const audioData = event.data;
+				const byteCharacters = atob(audioData);
+				const byteNumbers = new Array(byteCharacters.length);
 
-					audio.src = nextUrl;
-					audio.autoplay = true;
-					audio.preload = "auto";
-					setIsPlaying(true);
-					audio.onended = () => {
-						setIsPlaying(false);
-						setUrlQueue((prevQ) => prevQ.slice(1));
-					};
+				for (let i = 0; i < byteCharacters.length; i++) {
+					byteNumbers[i] = byteCharacters.charCodeAt(i);
 				}
-			} catch (error) {
-				console.error("Error playing Mp3 audio:", error);
-			}
-		};
-		if (!isPlaying && urlQueue.length > 0) {
-			playNAudio();
-		}
-	}, [urlQueue, isPlaying]);
 
-	useEffect(() => {
-		return () => {
-			if (ws.current) {
-				ws.current.close();
+				const byteArray = new Uint8Array(byteNumbers);
+				const audioBlob = new Blob([byteArray], { type: "audio/wav" });
+				const uri = URL.createObjectURL(audioBlob);
+
+				// Play the received audio
+				const { sound: newSound } = await Audio.Sound.createAsync(
+					{ uri },
+					{ shouldPlay: true }
+				);
+				setSound(newSound);
+			} catch (error) {
+				console.error("Error playing received audio:", error);
 			}
-			stopRecording();
+			const messageData = event.data;
+			setMessage(messageData);
+		};
+
+		setSocket(ws);
+
+		return () => {
+			ws.close();
+			if (sound) {
+				sound.unloadAsync();
+			}
 		};
 	}, []);
 
-	const Buttons = () => {
-		return (
-			<>
-				{!ws.current && (
-					<Button onPress={openWebSocket} title={"Open WebSocket"} />
-				)}
-				{ws.current && (
-					<>
-						<Button onPress={startRecording} title={"Start Recording"} />
-						<Button onPress={stopRecording} title={"Stop Recording"} />
-						<View
-							style={{
-								width: 20,
-								height: 20,
-								borderRadius: 10,
-								backgroundColor: isRecording ? "red" : "transparent",
-								borderWidth: 2,
-								borderColor: "black",
-								marginTop: 10,
-							}}
-						/>
-					</>
-				)}
-			</>
-		);
+	const startRecording = async () => {
+		try {
+			await Audio.requestPermissionsAsync();
+			await Audio.setAudioModeAsync({
+				allowsRecordingIOS: true,
+				playsInSilentModeIOS: true,
+			});
+
+			const { recording } = await Audio.Recording.createAsync(
+				Audio.RecordingOptionsPresets.HIGH_QUALITY,
+				async (status) => {
+					if (status.isDoneRecording && socket?.readyState === WebSocket.OPEN) {
+						// Send audio data to WebSocket server
+						const uri = await recording.getURI();
+						if (uri) {
+							socket.send(uri);
+						}
+					}
+				},
+				100 // Update interval in milliseconds
+			);
+
+			setRecording(recording);
+		} catch (error) {
+			console.error("Failed to start recording:", error);
+			Alert.alert("Error", "Failed to start recording");
+		}
+	};
+
+	const stopRecording = async () => {
+		if (!recording) return;
+
+		try {
+			await recording.stopAndUnloadAsync();
+			const uri = recording.getURI();
+			setRecording(null);
+
+			if (uri && socket?.readyState === WebSocket.OPEN) {
+				if (Platform.OS === "web") {
+					// For web, we need to handle the blob directly
+					const response = await fetch(uri);
+					const blob = await response.blob();
+
+					// Convert blob to base64
+					const reader = new FileReader();
+					reader.readAsDataURL(blob);
+					reader.onloadend = function () {
+						const base64data = reader.result?.toString().split(",")[1];
+						if (base64data && socket.readyState === WebSocket.OPEN) {
+							socket.send(base64data);
+						}
+					};
+				} else {
+					// For native platforms, use FileSystem
+					const fileData = await FileSystem.readAsStringAsync(uri, {
+						encoding: FileSystem.EncodingType.Base64,
+					});
+					socket.send(fileData);
+				}
+			}
+		} catch (error) {
+			console.error("Failed to stop recording:", error);
+			Alert.alert("Error", "Failed to stop recording");
+		}
 	};
 
 	return (
-		<View
-			style={{
-				flex: 1,
-				alignItems: "center",
-			}}
-		>
-			<View
-				style={{
-					backgroundColor: "lightblue",
-					padding: 10,
-					margin: 10,
-					width: "80%",
-					height: 250,
-					borderRadius: 10,
-				}}
-			>
-				<View
-					style={{
-						backgroundColor: "white",
-						padding: 2,
-						margin: 2,
-						width: "auto",
-						height: "auto",
-						marginBottom: 50,
-						alignItems: "center",
-						flex: 1,
-						borderRadius: 10,
-					}}
-				>
-					<Buttons />
-					<Text>{serverState}</Text>
-				</View>
-			</View>
+		<View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+			<Button
+				title={recording ? "Stop Recording" : "Start Recording"}
+				onPress={recording ? stopRecording : startRecording}
+			/>
+			{message && <Text>{message}</Text>}
 		</View>
 	);
-}
+};
+
+export default App;
