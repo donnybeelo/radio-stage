@@ -19,30 +19,39 @@ const App = () => {
 
 		ws.onmessage = async (event) => {
 			try {
-				// Convert base64 string directly to Blob without using Buffer
 				const audioData = event.data;
-				const byteCharacters = atob(audioData);
-				const byteNumbers = new Array(byteCharacters.length);
 
-				for (let i = 0; i < byteCharacters.length; i++) {
-					byteNumbers[i] = byteCharacters.charCodeAt(i);
+				if (Platform.OS === "web") {
+					// Web implementation using Blob
+					const byteCharacters = atob(audioData);
+					const byteNumbers = new Array(byteCharacters.length);
+					for (let i = 0; i < byteCharacters.length; i++) {
+						byteNumbers[i] = byteCharacters.charCodeAt(i);
+					}
+					const byteArray = new Uint8Array(byteNumbers);
+					const audioBlob = new Blob([byteArray], { type: "audio/wav" });
+					const uri = URL.createObjectURL(audioBlob);
+					const { sound: newSound } = await Audio.Sound.createAsync(
+						{ uri },
+						{ shouldPlay: true }
+					);
+					setSound(newSound);
+				} else {
+					// Native implementation using temporary file
+					const tempFilePath = `${FileSystem.cacheDirectory}temp_audio.wav`;
+					await FileSystem.writeAsStringAsync(tempFilePath, audioData, {
+						encoding: FileSystem.EncodingType.Base64,
+					});
+					const { sound: newSound } = await Audio.Sound.createAsync(
+						{ uri: tempFilePath },
+						{ shouldPlay: true }
+					);
+					setSound(newSound);
 				}
-
-				const byteArray = new Uint8Array(byteNumbers);
-				const audioBlob = new Blob([byteArray], { type: "audio/wav" });
-				const uri = URL.createObjectURL(audioBlob);
-
-				// Play the received audio
-				const { sound: newSound } = await Audio.Sound.createAsync(
-					{ uri },
-					{ shouldPlay: true }
-				);
-				setSound(newSound);
 			} catch (error) {
 				console.error("Error playing received audio:", error);
 			}
-			const messageData = event.data;
-			setMessage(messageData);
+			setMessage(event.data);
 		};
 
 		setSocket(ws);
@@ -70,7 +79,7 @@ const App = () => {
 						// Send audio data to WebSocket server
 						const uri = await recording.getURI();
 						if (uri) {
-							socket.send(uri);
+							// socket.send(uri);
 						}
 					}
 				},
