@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Platform } from 'react-native';
 import { Audio } from 'expo-av';
 import * as FileSystem from 'expo-file-system';
@@ -8,8 +8,15 @@ export const useWebSocket = (serverUrl: string) => {
     const [sound, setSound] = useState<Audio.Sound | null>(null);
 
     useEffect(() => {
-        const wsUrl = serverUrl.replace(/^http/, "ws");
-        const ws = new WebSocket(`${wsUrl}/ws`);
+        if (!serverUrl) {
+            console.error('Server URL is required');
+            return;
+        }
+        var wsUrl = serverUrl.replace(/^http/, "ws");
+        if (!wsUrl.startsWith("ws://")) {
+            wsUrl = `ws://${wsUrl}`;
+        }
+        const ws = new WebSocket(`${wsUrl}:8080/ws`);
 
         ws.onopen = () => {
             console.log("Connected to WebSocket");
@@ -61,3 +68,5 @@ export const useWebSocket = (serverUrl: string) => {
 
     return socket;
 };
+
+export default useWebSocket;

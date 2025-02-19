@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Alert, Platform } from 'react-native';
 import { Audio } from 'expo-av';
 import * as FileSystem from 'expo-file-system';
@@ -79,3 +79,5 @@ export const useAudioRecording = (socket: WebSocket | null) => {
 
     return { recording, startRecording, stopRecording };
 };
+
+export default useAudioRecording;
