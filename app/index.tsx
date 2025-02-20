@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ConnectScreen from "./screens/ConnectScreen";
-import RecordScreen from "./screens/RecordScreen";
+import StageList from "./screens/StageList";
 
 const App = () => {
 	const [isConnected, setIsConnected] = useState(false);
@@ -25,7 +25,7 @@ const App = () => {
 		);
 	}
 
-	return <RecordScreen serverUrl={storedUrl!} />;
+	return <StageList serverUrl={storedUrl! + ":8080"} />;
 };
 
 export default App;

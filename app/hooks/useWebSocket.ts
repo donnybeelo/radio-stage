@@ -16,7 +16,7 @@ export const useWebSocket = (serverUrl: string) => {
         if (!wsUrl.startsWith("ws://")) {
             wsUrl = `ws://${wsUrl}`;
         }
-        const ws = new WebSocket(`${wsUrl}:8080/ws`);
+        const ws = new WebSocket(`${wsUrl}`);
 
         ws.onopen = () => {
             console.log("Connected to WebSocket");

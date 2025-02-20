@@ -31,33 +31,25 @@ export default function ConnectScreen({
 		setError(null);
 
 		try {
-			var wsUrl = serverUrl.replace(/^http/, "ws");
-			if (!wsUrl.startsWith("ws")) {
-				wsUrl = `ws://${wsUrl}`;
+			let url = serverUrl;
+			if (!url.startsWith("http")) {
+				url = `http://${url}`;
 			}
-			const ws = new WebSocket(`${wsUrl}:8080/ws`);
 
-			const timeoutId = setTimeout(() => {
-				ws.close();
-				setError("Connection timeout");
-				setIsLoading(false);
-			}, 5000);
+			const response = await fetch(`${url}:8080/api/`);
+			const data = await response.json();
+			console.log(data);
 
-			ws.onopen = async () => {
-				clearTimeout(timeoutId);
-				ws.close();
-				await AsyncStorage.setItem("serverUrl", serverUrl);
+			if (data.status === "success") {
+				await AsyncStorage.setItem("serverUrl", url);
 				setIsLoading(false);
 				onConnect();
-			};
-
-			ws.onerror = () => {
-				clearTimeout(timeoutId);
-				setError("Failed to connect to server");
+			} else {
+				setError("Invalid server response");
 				setIsLoading(false);
-			};
+			}
 		} catch (error) {
-			setError("Invalid server URL");
+			setError("Failed to connect to server");
 			setIsLoading(false);
 		}
 	};
