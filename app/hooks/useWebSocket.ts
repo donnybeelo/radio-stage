@@ -159,9 +159,9 @@ export const useWebSocket = (serverUrl: string) => {
         // Define interfaces for WebRTC event and ICE candidate
         interface RTCIceCandidateEvent {
             candidate: {
-            candidate: string;
-            sdpMid: string | null;
-            sdpMLineIndex: number | null;
+                candidate: string;
+                sdpMid: string | null;
+                sdpMLineIndex: number | null;
             } | null;
         }
 
@@ -169,28 +169,28 @@ export const useWebSocket = (serverUrl: string) => {
             type: string;
             from: string | null;
             data: {
-            candidate: string;
-            sdpMid: string | null;
-            sdpMLineIndex: number | null;
+                candidate: string;
+                sdpMid: string | null;
+                sdpMLineIndex: number | null;
             };
         }
 
         peerConnection.onicecandidate = (event: RTCIceCandidateEvent) => {
             if (event.candidate) {
-            // Send ICE candidate to server
-            const message: IceCandidateMessage = {
-                type: "ice-candidate",
-                from: clientIdRef.current,
-                data: {
-                candidate: event.candidate.candidate,
-                sdpMid: event.candidate.sdpMid,
-                sdpMLineIndex: event.candidate.sdpMLineIndex
-                }
-            };
+                // Send ICE candidate to server
+                const message: IceCandidateMessage = {
+                    type: "ice-candidate",
+                    from: clientIdRef.current,
+                    data: {
+                        candidate: event.candidate.candidate,
+                        sdpMid: event.candidate.sdpMid,
+                        sdpMLineIndex: event.candidate.sdpMLineIndex
+                    }
+                };
 
-            if (ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify(message));
-            }
+                if (ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify(message));
+                }
             }
         };
 
@@ -212,61 +212,61 @@ export const useWebSocket = (serverUrl: string) => {
             console.log("Received remote track:", event.track.kind);
 
             if (event.track.kind === 'audio') {
-            try {
-                // Create MediaStream based on platform
-                let mediaStream: MediaStreamType;
-                if (Platform.OS === 'web') {
-                mediaStream = new MediaStream();
-                } else {
-                mediaStream = new WebRTCModules.MediaStream();
+                try {
+                    // Create MediaStream based on platform
+                    let mediaStream: MediaStreamType;
+                    if (Platform.OS === 'web') {
+                        mediaStream = new MediaStream();
+                    } else {
+                        mediaStream = new WebRTCModules.MediaStream();
+                    }
+
+                    mediaStream.addTrack(event.track);
+
+                    if (Platform.OS === "web") {
+                        // Connect remote audio stream to audio context for continuous playback
+                        const audioContext: AudioContext | null = audioContextRef.current;
+                        if (audioContext) {
+                            const source: MediaStreamAudioSourceNode = audioContext.createMediaStreamSource(mediaStream);
+                            source.connect(audioContext.destination);
+                            console.log("Playing continuous audio via AudioContext");
+                        } else {
+                            // Fallback to audio element
+                            const audioElement: HTMLAudioElement = new window.Audio();
+                            audioElement.srcObject = mediaStream;
+                            audioElement.autoplay = true;
+                            document.body.appendChild(audioElement);
+                            console.log("Playing audio via HTML audio element");
+                        }
+                    } else {
+                        // For mobile, use Expo's Audio API
+                        // We need to ensure sound is played continuously
+                        // and can handle new incoming streams
+
+                        // Unload previous sound if it exists
+                        if (sound) {
+                            await sound.unloadAsync();
+                        }
+
+                        interface AudioPlaybackStatus {
+                            sound: Audio.Sound;
+                            status: {
+                                isLoaded: boolean;
+                                [key: string]: any;
+                            };
+                        }
+
+                        const { sound: newSound }: AudioPlaybackStatus = await Audio.Sound.createAsync(
+                            { uri: mediaStream.toURL() },
+                            { shouldPlay: true, isLooping: false }
+                        );
+
+                        setSound(newSound);
+                        console.log("Playing audio via Expo Audio");
+                    }
+                } catch (error: unknown) {
+                    console.error("Error playing received audio:", error);
                 }
-
-                mediaStream.addTrack(event.track);
-
-                if (Platform.OS === "web") {
-                // Connect remote audio stream to audio context for continuous playback
-                const audioContext: AudioContext | null = audioContextRef.current;
-                if (audioContext) {
-                    const source: MediaStreamAudioSourceNode = audioContext.createMediaStreamSource(mediaStream);
-                    source.connect(audioContext.destination);
-                    console.log("Playing continuous audio via AudioContext");
-                } else {
-                    // Fallback to audio element
-                    const audioElement: HTMLAudioElement = new window.Audio();
-                    audioElement.srcObject = mediaStream;
-                    audioElement.autoplay = true;
-                    document.body.appendChild(audioElement);
-                    console.log("Playing audio via HTML audio element");
-                }
-                } else {
-                // For mobile, use Expo's Audio API
-                // We need to ensure sound is played continuously
-                // and can handle new incoming streams
-
-                // Unload previous sound if it exists
-                if (sound) {
-                    await sound.unloadAsync();
-                }
-
-                interface AudioPlaybackStatus {
-                    sound: Audio.Sound;
-                    status: {
-                      isLoaded: boolean;
-                      [key: string]: any;
-                    };
-                }
-
-                const { sound: newSound }: AudioPlaybackStatus = await Audio.Sound.createAsync(
-                    { uri: mediaStream.toURL() },
-                    { shouldPlay: true, isLooping: false }
-                );
-
-                setSound(newSound);
-                console.log("Playing audio via Expo Audio");
-                }
-            } catch (error: unknown) {
-                console.error("Error playing received audio:", error);
-            }
             }
         };
 
