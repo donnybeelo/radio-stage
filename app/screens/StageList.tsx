@@ -85,7 +85,7 @@ const StageList: React.FC<StageListProps> = ({ serverUrl }) => {
 	return (
 		<SafeAreaView style={styles.container} edges={["top"]}>
 			<FlatList
-				data={stages}
+				data={stages.sort((a, b) => (a.created_at < b.created_at ? 1 : -1))}
 				keyExtractor={(item) => item.path}
 				renderItem={({ item }) => (
 					<TouchableOpacity
