@@ -5,7 +5,9 @@ export default function RootLayout() {
 	return (
 		<Stack
 			screenOptions={{
-				headerShown: false,
+				headerTitle: "RadioStage",
+				navigationBarColor: "transparent",
+				statusBarStyle: "dark",
 			}}
 		>
 			<Stack.Screen name="index" />

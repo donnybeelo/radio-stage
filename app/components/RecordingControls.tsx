@@ -24,11 +24,19 @@ const RecordingControls: React.FC<RecordingControlsProps> = ({
 		onClose?.();
 	};
 
+	const handleRecordingPress = () => {
+		if (recording) {
+			stopRecording();
+		} else {
+			startRecording();
+		}
+	};
+
 	return (
 		<View style={{ padding: 16 }}>
 			<Button
 				title={recording ? "Stop Recording" : "Start Recording"}
-				onPress={recording ? stopRecording : startRecording}
+				onPress={handleRecordingPress}
 			/>
 			<View style={{ marginTop: 16 }}>
 				<Button title="Close" onPress={handleClose} color="#FF3B30" />

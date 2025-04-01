@@ -4,14 +4,15 @@ import {
 	FlatList,
 	TouchableOpacity,
 	Text,
-	StyleSheet,
 	Modal,
 	TextInput,
 	Button,
+	TouchableWithoutFeedback,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import RecordingControls from "../components/RecordingControls";
 import { Stage, StageListItem, StageResponse } from "../types/Stage";
+import { styles } from "../styles/StageList.styles";
 
 interface StageListProps {
 	serverUrl: string;
@@ -83,11 +84,6 @@ const StageList: React.FC<StageListProps> = ({ serverUrl }) => {
 
 	return (
 		<SafeAreaView style={styles.container} edges={["top"]}>
-			<Button
-				title="Create New Stage"
-				onPress={() => setCreateModalVisible(true)}
-			/>
-
 			<FlatList
 				data={stages}
 				keyExtractor={(item) => item.path}
@@ -104,10 +100,18 @@ const StageList: React.FC<StageListProps> = ({ serverUrl }) => {
 				)}
 			/>
 
+			{/* Floating Action Button */}
+			<TouchableOpacity
+				style={styles.fab}
+				onPress={() => setCreateModalVisible(true)}
+			>
+				<Text style={styles.fabText}>+</Text>
+			</TouchableOpacity>
+
 			{/* Create Stage Modal */}
 			<Modal
 				visible={isCreateModalVisible}
-				animationType="fade"
+				animationType="slide"
 				transparent={true}
 				onRequestClose={() => setCreateModalVisible(false)}
 			>
@@ -123,26 +127,17 @@ const StageList: React.FC<StageListProps> = ({ serverUrl }) => {
 								autoFocus
 							/>
 							<View style={styles.modalButtons}>
-								<TouchableOpacity
-									style={styles.button}
+								<Button
 									onPress={() => setCreateModalVisible(false)}
-								>
-									<Text style={styles.buttonText}>Cancel</Text>
-								</TouchableOpacity>
-								<TouchableOpacity
-									style={[
-										styles.button,
-										isCreating || !newStageName.trim()
-											? styles.buttonDisabled
-											: styles.buttonPrimary,
-									]}
+									title="Cancel"
+									color="#F00"
+								/>
+								<Button
+									title={isCreating ? "Creating..." : "Create"}
 									onPress={handleCreateStage}
 									disabled={isCreating || !newStageName.trim()}
-								>
-									<Text style={styles.buttonText}>
-										{isCreating ? "Creating..." : "Create"}
-									</Text>
-								</TouchableOpacity>
+									color="#007AFF"
+								/>
 							</View>
 						</View>
 					</SafeAreaView>
@@ -156,101 +151,28 @@ const StageList: React.FC<StageListProps> = ({ serverUrl }) => {
 				transparent={true}
 				onRequestClose={handleCloseStage}
 			>
-				<View style={styles.modalContainer}>
-					<View style={styles.modalContent}>
-						{selectedStage && (
-							<>
-								<Text style={styles.modalTitle}>{selectedStage.name}</Text>
-								<RecordingControls
-									serverUrl={selectedStage.url}
-									onClose={handleCloseStage}
-								/>
-							</>
-						)}
+				<TouchableWithoutFeedback onPress={handleCloseStage}>
+					<View
+						style={styles.modalContainer}
+						onStartShouldSetResponder={() => true}
+						onTouchEnd={(e) => e.stopPropagation()}
+					>
+						<View style={styles.modalContent}>
+							{selectedStage && (
+								<>
+									<Text style={styles.modalTitle}>{selectedStage.name}</Text>
+									<RecordingControls
+										serverUrl={selectedStage.url}
+										onClose={handleCloseStage}
+									/>
+								</>
+							)}
+						</View>
 					</View>
-				</View>
+				</TouchableWithoutFeedback>
 			</Modal>
 		</SafeAreaView>
 	);
 };
-
-const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-	},
-	stageItem: {
-		padding: 16,
-		borderBottomWidth: 1,
-		borderBottomColor: "#eee",
-	},
-	modalOverlay: {
-		flex: 1,
-		backgroundColor: "rgba(0, 0, 0, 0.5)",
-	},
-	modalContainer: {
-		flex: 1,
-		justifyContent: "center",
-		paddingHorizontal: 20,
-	},
-	modalContent: {
-		backgroundColor: "white",
-		borderRadius: 10,
-		padding: 20,
-		elevation: 5, // Android shadow
-		shadowColor: "#000", // iOS shadow
-		shadowOffset: {
-			width: 0,
-			height: 2,
-		},
-		shadowOpacity: 0.25,
-		shadowRadius: 4,
-	},
-	button: {
-		paddingVertical: 10,
-		paddingHorizontal: 20,
-		borderRadius: 5,
-		minWidth: 100,
-		backgroundColor: "#ccc",
-	},
-	buttonPrimary: {
-		backgroundColor: "#007AFF",
-	},
-	buttonDisabled: {
-		backgroundColor: "#cccccc",
-		opacity: 0.7,
-	},
-	buttonText: {
-		color: "#fff",
-		textAlign: "center",
-		fontSize: 16,
-	},
-	modalButtons: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		marginTop: 20,
-	},
-	modalTitle: {
-		fontSize: 20,
-		fontWeight: "bold",
-		marginBottom: 15,
-		textAlign: "center",
-	},
-	input: {
-		borderWidth: 1,
-		borderColor: "#ddd",
-		padding: 10,
-		marginBottom: 15,
-		borderRadius: 5,
-	},
-	stageName: {
-		fontSize: 16,
-		fontWeight: "500",
-	},
-	stageInfo: {
-		fontSize: 12,
-		color: "#666",
-		marginTop: 4,
-	},
-});
 
 export default StageList;
