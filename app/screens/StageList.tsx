@@ -7,7 +7,7 @@ import {
 	Modal,
 	TextInput,
 	Button,
-	TouchableWithoutFeedback,
+	Pressable,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import RecordingControls from "../components/RecordingControls";
@@ -151,7 +151,7 @@ const StageList: React.FC<StageListProps> = ({ serverUrl }) => {
 				transparent={true}
 				onRequestClose={handleCloseStage}
 			>
-				<TouchableWithoutFeedback onPress={handleCloseStage}>
+				<Pressable onPress={handleCloseStage} style={styles.modalOverlay}>
 					<View
 						style={styles.modalContainer}
 						onStartShouldSetResponder={() => true}
@@ -169,7 +169,7 @@ const StageList: React.FC<StageListProps> = ({ serverUrl }) => {
 							)}
 						</View>
 					</View>
-				</TouchableWithoutFeedback>
+				</Pressable>
 			</Modal>
 		</SafeAreaView>
 	);
