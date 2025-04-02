@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Alert, Platform } from 'react-native';
 import { Audio } from 'expo-av';
 import * as FileSystem from 'expo-file-system';
@@ -34,7 +34,7 @@ export const useAudioRecording = (socket: WebSocket | null) => {
 
     const recordLoop = async () => {
         const recording = new Audio.Recording();
-        recordingRef.current = recording; // Store in ref for reliable access
+        recordingRef.current = recording;
         setRecording(recording);
 
         try {
@@ -50,10 +50,8 @@ export const useAudioRecording = (socket: WebSocket | null) => {
         console.log('Recording started');
         setTimeout(() => {
             stopRecording(false);
-        }, 1000); // Stop recording after 0.5 seconds
+        }, 1000);
     }
-
-    // Function to stop recording and send audio data
 
     const stopRecording = async (stop: boolean = true) => {
         if (!recordingRef.current) {

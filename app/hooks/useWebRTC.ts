@@ -1,12 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
 import { Audio } from 'expo-av';
-import * as FileSystem from 'expo-file-system';
 
 // Conditional imports for WebRTC
 let WebRTCModules: any = {};
 if (Platform.OS !== 'web') {
-    // Import for React Native
     try {
         WebRTCModules = require('react-native-webrtc');
     } catch (e) {
@@ -15,10 +13,8 @@ if (Platform.OS !== 'web') {
 }
 
 // Define types that work across platforms
-type PeerConnectionType = any; // RTCPeerConnection
-type SessionDescriptionType = any; // RTCSessionDescription
-type IceCandidateType = any; // RTCIceCandidate
-type MediaStreamType = any; // MediaStream
+type PeerConnectionType = any;
+type MediaStreamType = any;
 
 interface SignalingMessage {
     type: string;
@@ -42,20 +38,20 @@ export const useWebRTC = (serverUrl: string) => {
             return;
         }
 
-        // Setup audio context for continuous playback
+        // Setup audio context for web playback
         if (Platform.OS === "web") {
             const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
             audioContextRef.current = new AudioContextClass();
         }
 
-        // Setup WebSocket for signaling (keeping the same URL format for compatibility)
+        // Setup WebSocket for signaling
         var wsUrl = serverUrl.replace(/^http/, "ws");
         if (!wsUrl.startsWith("ws://")) {
             wsUrl = `ws://${wsUrl}`;
         }
         const ws = new WebSocket(`${wsUrl}`);
 
-        // Setup WebRTC configuration
+        // WebRTC configuration
         const configuration = {
             iceServers: [
                 { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }
@@ -67,7 +63,6 @@ export const useWebRTC = (serverUrl: string) => {
         if (Platform.OS === 'web') {
             peerConnection = new RTCPeerConnection(configuration);
         } else {
-            // Mobile implementation
             if (WebRTCModules.RTCPeerConnection) {
                 peerConnection = new WebRTCModules.RTCPeerConnection(configuration);
             } else {
@@ -81,7 +76,7 @@ export const useWebRTC = (serverUrl: string) => {
         // Setup local audio stream
         setupLocalAudioStream(peerConnection);
 
-        // WebSocket event handlers for signaling
+        // WebSocket event handlers
         ws.onopen = () => {
             console.log("Connected to WebSocket for signaling");
         };
@@ -96,16 +91,12 @@ export const useWebRTC = (serverUrl: string) => {
 
                 switch (message.type) {
                     case "client-id":
-                        // Store client ID assigned by server
                         clientIdRef.current = message.data;
                         console.log("Received client ID:", clientIdRef.current);
-
-                        // After getting client ID, create and send offer
                         createAndSendOffer(peerConnection, ws);
                         break;
 
                     case "answer":
-                        // Set remote description using platform-specific SessionDescription
                         let answerDesc;
                         if (Platform.OS === 'web') {
                             answerDesc = new RTCSessionDescription({
@@ -125,7 +116,6 @@ export const useWebRTC = (serverUrl: string) => {
                         break;
 
                     case "ice-candidate":
-                        // Add ICE candidate using platform-specific IceCandidate
                         if (message.data && message.data.candidate) {
                             try {
                                 let candidate;
@@ -156,7 +146,6 @@ export const useWebRTC = (serverUrl: string) => {
         };
 
         // WebRTC event handlers
-        // Define interfaces for WebRTC event and ICE candidate
         interface RTCIceCandidateEvent {
             candidate: {
                 candidate: string;
@@ -165,20 +154,9 @@ export const useWebRTC = (serverUrl: string) => {
             } | null;
         }
 
-        interface IceCandidateMessage {
-            type: string;
-            from: string | null;
-            data: {
-                candidate: string;
-                sdpMid: string | null;
-                sdpMLineIndex: number | null;
-            };
-        }
-
         peerConnection.onicecandidate = (event: RTCIceCandidateEvent) => {
             if (event.candidate) {
-                // Send ICE candidate to server
-                const message: IceCandidateMessage = {
+                const message = {
                     type: "ice-candidate",
                     from: clientIdRef.current,
                     data: {
@@ -202,7 +180,6 @@ export const useWebRTC = (serverUrl: string) => {
             }
         };
 
-        // Define interfaces for track event
         interface RTCTrackEvent {
             track: MediaStreamTrack;
             streams: MediaStreamType[];
@@ -213,7 +190,6 @@ export const useWebRTC = (serverUrl: string) => {
 
             if (event.track.kind === 'audio') {
                 try {
-                    // Create MediaStream based on platform
                     let mediaStream: MediaStreamType;
                     if (Platform.OS === 'web') {
                         mediaStream = new MediaStream();
@@ -224,14 +200,12 @@ export const useWebRTC = (serverUrl: string) => {
                     mediaStream.addTrack(event.track);
 
                     if (Platform.OS === "web") {
-                        // Connect remote audio stream to audio context for continuous playback
                         const audioContext: AudioContext | null = audioContextRef.current;
                         if (audioContext) {
                             const source: MediaStreamAudioSourceNode = audioContext.createMediaStreamSource(mediaStream);
                             source.connect(audioContext.destination);
                             console.log("Playing continuous audio via AudioContext");
                         } else {
-                            // Fallback to audio element
                             const audioElement: HTMLAudioElement = new window.Audio();
                             audioElement.srcObject = mediaStream;
                             audioElement.autoplay = true;
@@ -239,11 +213,6 @@ export const useWebRTC = (serverUrl: string) => {
                             console.log("Playing audio via HTML audio element");
                         }
                     } else {
-                        // For mobile, use Expo's Audio API
-                        // We need to ensure sound is played continuously
-                        // and can handle new incoming streams
-
-                        // Unload previous sound if it exists
                         if (sound) {
                             await sound.unloadAsync();
                         }
@@ -256,13 +225,24 @@ export const useWebRTC = (serverUrl: string) => {
                             };
                         }
 
-                        const { sound: newSound }: AudioPlaybackStatus = await Audio.Sound.createAsync(
-                            { uri: mediaStream.toURL() },
-                            { shouldPlay: true, isLooping: false }
-                        );
+                        try {
+                            const streamUrl = mediaStream.toURL();
+                            console.log("Attempting to play stream from URL:", streamUrl);
 
-                        setSound(newSound);
-                        console.log("Playing audio via Expo Audio");
+                            const { sound: newSound }: AudioPlaybackStatus = await Audio.Sound.createAsync(
+                                { uri: streamUrl },
+                                { shouldPlay: true, isLooping: false }
+                            );
+
+                            setSound(newSound);
+                            console.log("Playing audio via Expo Audio");
+                        } catch (error: any) {
+                            if (error.message && error.message.includes("FileNotFoundException")) {
+                                console.warn("File not found for audio playback. Stream URL may be invalid or cleaned up:", error);
+                            } else {
+                                console.error("Unexpected error during audio playback:", error);
+                            }
+                        }
                     }
                 } catch (error: unknown) {
                     console.error("Error playing received audio:", error);
@@ -277,7 +257,6 @@ export const useWebRTC = (serverUrl: string) => {
             console.log("Cleaning up WebRTC and WebSocket connections");
             isConnectedRef.current = false;
 
-            // Send disconnect message before closing
             if (ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({
                     type: "disconnect",
@@ -285,25 +264,20 @@ export const useWebRTC = (serverUrl: string) => {
                 }));
             }
 
-            // Stop local stream tracks
             if (localStreamRef.current) {
                 localStreamRef.current.getTracks().forEach((track: MediaStreamTrack) => track.stop());
             }
 
-            // Close WebRTC connection
             if (peerConnectionRef.current) {
                 peerConnectionRef.current.close();
             }
 
-            // Close audio context
             if (audioContextRef.current) {
                 audioContextRef.current.close();
             }
 
-            // Close WebSocket connection
             ws.close();
 
-            // Unload audio
             if (sound) {
                 sound.unloadAsync();
             }
@@ -313,7 +287,6 @@ export const useWebRTC = (serverUrl: string) => {
     // Setup local audio stream and add to peer connection
     const setupLocalAudioStream = async (peerConnection: PeerConnectionType) => {
         try {
-            // Request microphone access based on platform
             let stream;
             if (Platform.OS === 'web') {
                 stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
@@ -323,7 +296,6 @@ export const useWebRTC = (serverUrl: string) => {
 
             localStreamRef.current = stream;
 
-            // Add all tracks to the peer connection
             stream.getTracks().forEach((track: any) => {
                 peerConnection.addTrack(track, stream);
                 console.log(`Added local ${track.kind} track to peer connection`);
@@ -333,10 +305,9 @@ export const useWebRTC = (serverUrl: string) => {
         }
     };
 
-    // Helper function to create and send offer
+    // Create and send offer
     const createAndSendOffer = async (peerConnection: PeerConnectionType, ws: WebSocket) => {
         try {
-            // Create offer with audio
             const offer = await peerConnection.createOffer({
                 offerToReceiveAudio: true,
                 offerToReceiveVideo: false
@@ -344,7 +315,6 @@ export const useWebRTC = (serverUrl: string) => {
 
             await peerConnection.setLocalDescription(offer);
 
-            // Send offer to server
             const message = {
                 type: "offer",
                 from: clientIdRef.current,
@@ -363,23 +333,19 @@ export const useWebRTC = (serverUrl: string) => {
         }
     };
 
-    // Add a custom send method to maintain compatibility with existing code
+    // Custom socket implementation
     const customSocket = socket ? {
         ...socket,
         send: (data: string) => {
-            // If WebRTC is connected, we don't need to send audio data via WebSocket
-            // as it's already being sent via the audio track
             if (!isConnectedRef.current) {
                 socket.send(data);
             }
         },
         close: () => {
-            // Stop local stream tracks before closing
             if (localStreamRef.current) {
                 localStreamRef.current.getTracks().forEach((track: MediaStreamTrack) => track.stop());
             }
 
-            // Close WebRTC connection
             if (peerConnectionRef.current) {
                 peerConnectionRef.current.close();
             }
@@ -388,7 +354,6 @@ export const useWebRTC = (serverUrl: string) => {
         }
     } : null;
 
-    // Return modified socket with WebRTC capabilities
     return customSocket;
 };
 

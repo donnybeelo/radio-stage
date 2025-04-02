@@ -65,9 +65,9 @@ const StageList: React.FC<StageListProps> = ({ serverUrl }) => {
 
 	const handleStageSelect = (stage: Stage) => {
 		setSelectedStage({
-			id: stage.path, // use path as id
+			id: stage.path,
 			name: stage.name,
-			url: `${serverUrl}${stage.path}`, // construct full WebSocket URL
+			url: `${serverUrl}${stage.path}`,
 		});
 	};
 
@@ -87,7 +87,7 @@ const StageList: React.FC<StageListProps> = ({ serverUrl }) => {
 			if (response.ok) {
 				setCreateModalVisible(false);
 				setNewStageName("");
-				fetchStages(); // Refresh the list
+				fetchStages();
 			}
 		} catch (error) {
 			console.error("Failed to create stage:", error);
@@ -118,7 +118,6 @@ const StageList: React.FC<StageListProps> = ({ serverUrl }) => {
 				)}
 			/>
 
-			{/* Floating Action Button */}
 			<TouchableOpacity
 				style={styles.fab}
 				onPress={() => setCreateModalVisible(true)}
@@ -126,7 +125,6 @@ const StageList: React.FC<StageListProps> = ({ serverUrl }) => {
 				<Text style={styles.fabText}>+</Text>
 			</TouchableOpacity>
 
-			{/* Create Stage Modal */}
 			<Modal
 				visible={isCreateModalVisible}
 				animationType="slide"
@@ -162,7 +160,6 @@ const StageList: React.FC<StageListProps> = ({ serverUrl }) => {
 				</View>
 			</Modal>
 
-			{/* Recording Modal */}
 			<Modal
 				visible={selectedStage !== null}
 				animationType="slide"

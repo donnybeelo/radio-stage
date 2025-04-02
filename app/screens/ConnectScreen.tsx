@@ -38,7 +38,6 @@ export default function ConnectScreen({
 
 			const response = await fetch(`${url}:8080/api/`);
 			const data = await response.json();
-			console.log(data);
 
 			if (data.status === "success") {
 				await AsyncStorage.setItem("serverUrl", url);
