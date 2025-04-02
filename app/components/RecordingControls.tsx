@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Button } from "react-native";
 import { useAudioRecording } from "../hooks/useAudioRecording";
-import { useWebSocket } from "../hooks/useWebSocket";
+import { useWebRTC } from "../hooks/useWebRTC";
 
 interface RecordingControlsProps {
 	serverUrl: string;
@@ -12,7 +12,7 @@ const RecordingControls: React.FC<RecordingControlsProps> = ({
 	serverUrl,
 	onClose,
 }) => {
-	const socket = useWebSocket(serverUrl);
+	const socket = useWebRTC(serverUrl);
 	const { recording, startRecording, stopRecording } =
 		useAudioRecording(socket);
 

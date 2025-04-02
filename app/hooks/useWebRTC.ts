@@ -27,7 +27,7 @@ interface SignalingMessage {
     data: any;
 }
 
-export const useWebSocket = (serverUrl: string) => {
+export const useWebRTC = (serverUrl: string) => {
     const [socket, setSocket] = useState<WebSocket | null>(null);
     const [sound, setSound] = useState<Audio.Sound | null>(null);
     const peerConnectionRef = useRef<PeerConnectionType | null>(null);
@@ -392,4 +392,4 @@ export const useWebSocket = (serverUrl: string) => {
     return customSocket;
 };
 
-export default useWebSocket;
+export default useWebRTC;
