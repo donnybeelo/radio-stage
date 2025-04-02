@@ -1,6 +1,6 @@
 {
 	"expo": {
-		"name": "radio-stage",
+		"name": "RadioStage",
 		"slug": "radio-stage",
 		"version": "1.0.0",
 		"orientation": "portrait",
@@ -30,7 +30,7 @@
 				"expo-splash-screen",
 				{
 					"image": "./assets/images/adaptive-icon.png",
-					"imageWidth": 200,
+					"imageWidth": 300,
 					"resizeMode": "contain",
 					"backgroundColor": "#ffffff"
 				}
