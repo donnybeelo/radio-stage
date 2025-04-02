@@ -1,4 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, {
+	useEffect,
+	useState,
+	useLayoutEffect,
+	useCallback,
+} from "react"; // Added useCallback
 import {
 	View,
 	FlatList,
@@ -10,8 +15,10 @@ import {
 	Pressable,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native"; // Import navigation hook
 import RecordingControls from "../components/RecordingControls";
 import styles from "../styles/StageList.styles";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 interface Stage {
 	path: string;
@@ -22,6 +29,7 @@ interface Stage {
 
 interface StageListProps {
 	serverUrl: string;
+	leave: () => void;
 }
 
 interface StageListItem {
@@ -36,7 +44,8 @@ interface StageResponse {
 	data: Stage[];
 }
 
-const StageList: React.FC<StageListProps> = ({ serverUrl }) => {
+const StageList: React.FC<StageListProps> = ({ serverUrl, leave }) => {
+	const navigation = useNavigation(); // Initialize navigation
 	const [stages, setStages] = useState<Stage[]>([]);
 	const [selectedStage, setSelectedStage] = useState<StageListItem | null>(
 		null
@@ -47,6 +56,8 @@ const StageList: React.FC<StageListProps> = ({ serverUrl }) => {
 
 	useEffect(() => {
 		fetchStages();
+		const intervalId = setInterval(fetchStages, 2000); // Refresh every 2 seconds
+		return () => clearInterval(intervalId); // Cleanup interval on unmount
 	}, []);
 
 	const fetchStages = async () => {
@@ -100,6 +111,23 @@ const StageList: React.FC<StageListProps> = ({ serverUrl }) => {
 		setSelectedStage(null);
 	};
 
+	const handleLeaveServer = useCallback(() => {
+		navigation.setOptions({
+			headerRight: null,
+		}); // Remove header button
+		leave(); // Use the passed function to update the state
+	}, [navigation, leave]);
+
+	useLayoutEffect(() => {
+		navigation.setOptions({
+			headerRight: () => (
+				<TouchableOpacity style={styles.leaveFab} onPress={handleLeaveServer}>
+					<Ionicons name="exit-outline" size={24} color="white" />
+				</TouchableOpacity>
+			),
+		});
+	}, [navigation, handleLeaveServer]); // Added handleLeaveServer to dependencies
+
 	return (
 		<SafeAreaView style={styles.container} edges={["top"]}>
 			<FlatList
@@ -112,7 +140,7 @@ const StageList: React.FC<StageListProps> = ({ serverUrl }) => {
 					>
 						<Text style={styles.stageName}>{item.name}</Text>
 						<Text style={styles.stageInfo}>
-							{`${item.clients.length} clients • Created ${new Date(item.created_at).toLocaleDateString()}`}
+							{`${item.clients.length} connected • Created ${new Date(item.created_at).toLocaleDateString()}`}
 						</Text>
 					</TouchableOpacity>
 				)}
@@ -122,7 +150,7 @@ const StageList: React.FC<StageListProps> = ({ serverUrl }) => {
 				style={styles.fab}
 				onPress={() => setCreateModalVisible(true)}
 			>
-				<Text style={styles.fabText}>+</Text>
+				<Ionicons name="add" size={24} color="white" />
 			</TouchableOpacity>
 
 			<Modal

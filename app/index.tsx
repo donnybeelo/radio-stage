@@ -19,13 +19,21 @@ const App = () => {
 	if (!isConnected) {
 		return (
 			<ConnectScreen
-				onConnect={() => setIsConnected(true)}
+				onConnect={(url) => {
+					setIsConnected(true);
+					setStoredUrl(url);
+				}}
 				serverUrl={storedUrl || ""}
 			/>
 		);
+	} else {
+		return (
+			<StageList
+				serverUrl={storedUrl! + ":8080"}
+				leave={() => setIsConnected(false)}
+			/>
+		);
 	}
-
-	return <StageList serverUrl={storedUrl! + ":8080"} />;
 };
 
 export default App;

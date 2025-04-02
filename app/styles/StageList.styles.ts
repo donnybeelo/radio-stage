@@ -90,9 +90,33 @@ const styles = StyleSheet.create({
 		elevation: 4,
 		boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.25)",
 	},
+	leaveFab: {
+		width: 40,
+		height: 40,
+		borderRadius: 28,
+		marginRight: 10,
+		backgroundColor: "#FF0000",
+		justifyContent: "center",
+		alignItems: "center",
+		elevation: 4,
+		boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.25)",
+	},
 	fabText: {
 		color: "#fff",
 		fontSize: 24,
+	},
+	leaveButton: {
+		marginTop: 10,
+		padding: 10,
+		backgroundColor: "#FF3B30",
+		borderRadius: 5,
+		alignItems: "center",
+	},
+	leaveButtonText: {
+		color: "#007AFF", // Match the title bar color
+		fontSize: 16,
+		fontWeight: "bold",
+		marginRight: 10, // Add some margin for spacing
 	},
 });
 

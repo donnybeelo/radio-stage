@@ -16,13 +16,6 @@ if (Platform.OS !== 'web') {
 type PeerConnectionType = any;
 type MediaStreamType = any;
 
-interface SignalingMessage {
-    type: string;
-    from: string;
-    to?: string;
-    data: any;
-}
-
 export const useWebRTC = (serverUrl: string) => {
     const [socket, setSocket] = useState<WebSocket | null>(null);
     const [sound, setSound] = useState<Audio.Sound | null>(null);
