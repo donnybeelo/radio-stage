@@ -11,11 +11,29 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import RecordingControls from "../components/RecordingControls";
-import { Stage, StageListItem, StageResponse } from "../types/Stage";
-import { styles } from "../styles/StageList.styles";
+import styles from "../styles/StageList.styles";
+
+interface Stage {
+	path: string;
+	name: string;
+	created_at: string;
+	clients: string[];
+}
 
 interface StageListProps {
 	serverUrl: string;
+}
+
+interface StageListItem {
+	id: string;
+	name: string;
+	url: string;
+}
+
+interface StageResponse {
+	status: string;
+	message: string;
+	data: Stage[];
 }
 
 const StageList: React.FC<StageListProps> = ({ serverUrl }) => {
