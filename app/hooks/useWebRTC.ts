@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Platform } from 'react-native';
 import { Audio } from 'expo-av';
 
@@ -16,7 +16,15 @@ if (Platform.OS !== 'web') {
 type PeerConnectionType = any;
 type MediaStreamType = any;
 
-export const useWebRTC = (serverUrl: string): any => {
+interface CustomSocket {
+    send: (data: string) => void;
+    close: () => void;
+    toggleMic: () => void;
+    micEnabled: boolean;
+    isConnected: boolean;
+}
+
+export const useWebRTC = (serverUrl: string): { customSocket: CustomSocket | null; connect: () => void } => {
     const [socket, setSocket] = useState<WebSocket | null>(null);
     const [sound, setSound] = useState<Audio.Sound | null>(null);
     const peerConnectionRef = useRef<PeerConnectionType | null>(null);
@@ -25,7 +33,12 @@ export const useWebRTC = (serverUrl: string): any => {
     const audioContextRef = useRef<AudioContext | null>(null);
     const isConnectedRef = useRef<boolean>(false);
 
-    useEffect(() => {
+    const connect = useCallback(() => {
+        if (isConnectedRef.current) {
+            console.warn("Already connected. Cannot connect again.");
+            return;
+        }
+
         if (!serverUrl) {
             console.error('Server URL is required');
             return;
@@ -361,7 +374,7 @@ export const useWebRTC = (serverUrl: string): any => {
         isConnected: isConnectedRef.current,
     } : null;
 
-    return customSocket;
+    return { customSocket, connect };
 };
 
 export default useWebRTC;
