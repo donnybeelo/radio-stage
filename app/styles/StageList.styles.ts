@@ -118,6 +118,39 @@ const styles = StyleSheet.create({
 		fontWeight: "bold",
 		marginRight: 10, // Add some margin for spacing
 	},
+	connectButton: {
+		backgroundColor: "#007AFF",
+	},
+	muteButton: {
+		backgroundColor: "#FF9500",
+	},
+	unmuteButton: {
+		backgroundColor: "#34C759",
+	},
+	closeButton: {
+		position: "absolute",
+		top: 0,
+		right: 0,
+		backgroundColor: "#FF3B30",
+		borderRadius: 16,
+		width: 32,
+		height: 32,
+		alignItems: "center",
+		justifyContent: "center",
+	},
+	buttonRow: {
+		flexDirection: "row",
+		justifyContent: "center",
+		marginTop: 16,
+	},
+	circleButton: {
+		width: 56,
+		height: 56,
+		borderRadius: 28,
+		alignItems: "center",
+		justifyContent: "center",
+		marginHorizontal: 8,
+	},
 });
 
 export default styles;

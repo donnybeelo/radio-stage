@@ -1,15 +1,19 @@
 import React from "react";
-import { View, Button, Text } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useWebRTC } from "../hooks/useWebRTC";
+import styles from "../styles/StageList.styles";
 
 interface RecordingControlsProps {
 	serverUrl: string;
 	onClose?: () => void;
+	name?: string;
 }
 
 const RecordingControls: React.FC<RecordingControlsProps> = ({
 	serverUrl,
 	onClose,
+	name,
 }) => {
 	const webRTCSocket = useWebRTC(serverUrl);
 	const socket = webRTCSocket.customSocket;
@@ -20,21 +24,34 @@ const RecordingControls: React.FC<RecordingControlsProps> = ({
 	};
 
 	return (
-		<View style={{ padding: 16 }}>
-			{socket?.isConnected ? (
-				<Button
-					title={socket?.micEnabled ? "Mute" : "Unmute"}
-					onPress={socket?.toggleMic}
-				/>
-			) : (
-				<Button
-					title="Connect"
-					onPress={() => webRTCSocket.connect()}
-					color="#007AFF"
-				/>
-			)}
-			<View style={{ marginTop: 16 }}>
-				<Button title="Close" onPress={handleClose} color="#FF3B30" />
+		<View style={styles.container}>
+				<Text style={styles.modalTitle}>{name}</Text>
+				<TouchableOpacity style={styles.closeButton} onPress={handleClose}>
+					<Ionicons name="close" size={24} color="#fff" />
+				</TouchableOpacity>
+			<View style={styles.buttonRow}>
+				{socket?.isConnected ? (
+					<TouchableOpacity
+						style={[
+							styles.circleButton,
+							socket?.micEnabled ? styles.muteButton : styles.unmuteButton,
+						]}
+						onPress={socket?.toggleMic}
+					>
+						<Ionicons
+							name={socket?.micEnabled ? "mic" : "mic-off"}
+							size={24}
+							color="#fff"
+						/>
+					</TouchableOpacity>
+				) : (
+					<TouchableOpacity
+						style={[styles.circleButton, styles.connectButton]}
+						onPress={() => webRTCSocket.connect()}
+					>
+						<Ionicons name="radio" size={24} color="#fff" />
+					</TouchableOpacity>
+				)}
 			</View>
 		</View>
 	);

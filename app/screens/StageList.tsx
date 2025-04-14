@@ -202,13 +202,11 @@ const StageList: React.FC<StageListProps> = ({ serverUrl, leave }) => {
 					>
 						<View style={styles.modalContent}>
 							{selectedStage && (
-								<>
-									<Text style={styles.modalTitle}>{selectedStage.name}</Text>
-									<RecordingControls
-										serverUrl={selectedStage.url}
-										onClose={handleCloseStage}
-									/>
-								</>
+								<RecordingControls
+									name={selectedStage.name}
+									serverUrl={selectedStage.url}
+									onClose={handleCloseStage}
+								/>
 							)}
 						</View>
 					</View>
