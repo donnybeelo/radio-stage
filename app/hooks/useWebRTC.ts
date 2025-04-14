@@ -19,25 +19,39 @@ type MediaStreamType = any;
 interface CustomSocket {
     send: (data: string) => void;
     close: () => void;
-    toggleMic: () => void;
     micEnabled: boolean;
     isConnected: boolean;
 }
 
-export const useWebRTC = (serverUrl: string): { customSocket: CustomSocket | null; connect: () => void } => {
+export const useWebRTC = (serverUrl: string): { customSocket: CustomSocket | null; connect: (mute: boolean) => void; toggleMic: () => void } => {
     const [socket, setSocket] = useState<WebSocket | null>(null);
     const [sound, setSound] = useState<Audio.Sound | null>(null);
+    const mutedRef = useRef(false);
     const peerConnectionRef = useRef<PeerConnectionType | null>(null);
     const clientIdRef = useRef<string | null>(null);
     const localStreamRef = useRef<MediaStreamType | null>(null);
     const audioContextRef = useRef<AudioContext | null>(null);
     const isConnectedRef = useRef<boolean>(false);
 
-    const connect = useCallback(() => {
+    const toggleMic = useCallback(() => {
+        mutedRef.current = !mutedRef.current;
+        const localStream = localStreamRef.current;
+        if (localStream) {
+            const audioTrack = localStream.getAudioTracks()[0];
+            if (audioTrack) {
+                audioTrack.enabled = !mutedRef.current;
+                console.log("Microphone state applied:", audioTrack.enabled);
+            }
+        }
+    }, []);
+
+    const connect = useCallback((mute: boolean) => {
         if (isConnectedRef.current) {
             console.warn("Already connected. Cannot connect again.");
             return;
         }
+
+        mutedRef.current = mute;
 
         if (!serverUrl) {
             console.error('Server URL is required');
@@ -306,6 +320,12 @@ export const useWebRTC = (serverUrl: string): { customSocket: CustomSocket | nul
                 peerConnection.addTrack(track, stream);
                 console.log(`Added local ${track.kind} track to peer connection`);
             });
+
+            const audioTrack = stream.getAudioTracks()[0];
+            if (audioTrack) {
+                audioTrack.enabled = !mutedRef.current;
+                console.log("Microphone state applied:", audioTrack.enabled);
+            }
         } catch (error) {
             console.error("Error accessing microphone:", error);
         }
@@ -358,23 +378,11 @@ export const useWebRTC = (serverUrl: string): { customSocket: CustomSocket | nul
 
             socket.close();
         },
-        toggleMic: () => {
-            const localStream = localStreamRef.current;
-            if (localStream) {
-                const audioTrack = localStream.getAudioTracks()[0];
-                if (audioTrack) {
-                    audioTrack.enabled = !audioTrack.enabled;
-                    console.log("Microphone toggled:", audioTrack.enabled);
-                }
-            }
-        },
-        micEnabled: localStreamRef.current
-            ? localStreamRef.current.getAudioTracks()[0].enabled
-            : false,
+        micEnabled: mutedRef.current,
         isConnected: isConnectedRef.current,
     } : null;
 
-    return { customSocket, connect };
+    return { customSocket, connect, toggleMic };
 };
 
 export default useWebRTC;

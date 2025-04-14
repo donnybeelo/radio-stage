@@ -101,9 +101,11 @@ const styles = StyleSheet.create({
 		elevation: 4,
 		boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.25)",
 	},
-	fabText: {
+	pillText: {
 		color: "#fff",
-		fontSize: 24,
+		fontSize: 16,
+		marginLeft: 10,
+		textTransform: "uppercase",
 	},
 	leaveButton: {
 		marginTop: 10,
@@ -150,6 +152,16 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 		justifyContent: "center",
 		marginHorizontal: 8,
+	},
+	pillButton: {
+		width: "auto",
+		height: 56,
+		borderRadius: 28,
+		alignItems: "center",
+		flexDirection: "row",
+		paddingHorizontal: 14,
+		marginHorizontal: 8,
+
 	},
 });
 

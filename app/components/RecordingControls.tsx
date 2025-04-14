@@ -17,41 +17,53 @@ const RecordingControls: React.FC<RecordingControlsProps> = ({
 }) => {
 	const webRTCSocket = useWebRTC(serverUrl);
 	const socket = webRTCSocket.customSocket;
+	const [connectText, setConnectText] = React.useState("Connect");
+	const [muted, setMuted] = React.useState(false);
+
+	const handleToggleMic = () => {
+		if (socket?.isConnected) {
+			webRTCSocket.toggleMic();
+			setMuted((prev) => !prev);
+		} else {
+			setMuted((prev) => !prev);
+		}
+	};
 
 	const handleClose = () => {
+		setConnectText("Connect");
 		socket?.close();
 		onClose?.();
+	};
+	const handleConnect = () => {
+		webRTCSocket.connect(muted);
+		setConnectText("Connecting...");
 	};
 
 	return (
 		<View style={styles.container}>
-				<Text style={styles.modalTitle}>{name}</Text>
-				<TouchableOpacity style={styles.closeButton} onPress={handleClose}>
-					<Ionicons name="close" size={24} color="#fff" />
-				</TouchableOpacity>
+			<Text style={styles.modalTitle}>{name}</Text>
+			<TouchableOpacity style={styles.closeButton} onPress={handleClose}>
+				<Ionicons name="close" size={24} color="#fff" />
+			</TouchableOpacity>
 			<View style={styles.buttonRow}>
-				{socket?.isConnected ? (
+				{!socket?.isConnected && (
 					<TouchableOpacity
-						style={[
-							styles.circleButton,
-							socket?.micEnabled ? styles.muteButton : styles.unmuteButton,
-						]}
-						onPress={socket?.toggleMic}
-					>
-						<Ionicons
-							name={socket?.micEnabled ? "mic" : "mic-off"}
-							size={24}
-							color="#fff"
-						/>
-					</TouchableOpacity>
-				) : (
-					<TouchableOpacity
-						style={[styles.circleButton, styles.connectButton]}
-						onPress={() => webRTCSocket.connect()}
+						style={[styles.pillButton, styles.connectButton]}
+						onPress={handleConnect}
 					>
 						<Ionicons name="radio" size={24} color="#fff" />
+						<Text style={styles.pillText}>{connectText}</Text>
 					</TouchableOpacity>
 				)}
+				<TouchableOpacity
+					style={[
+						styles.circleButton,
+						muted ? styles.unmuteButton : styles.muteButton,
+					]}
+					onPress={handleToggleMic}
+				>
+					<Ionicons name={muted ? "mic-off" : "mic"} size={24} color="#fff" />
+				</TouchableOpacity>
 			</View>
 		</View>
 	);
