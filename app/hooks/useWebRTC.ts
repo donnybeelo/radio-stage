@@ -16,7 +16,7 @@ if (Platform.OS !== 'web') {
 type PeerConnectionType = any;
 type MediaStreamType = any;
 
-export const useWebRTC = (serverUrl: string) => {
+export const useWebRTC = (serverUrl: string): any => {
     const [socket, setSocket] = useState<WebSocket | null>(null);
     const [sound, setSound] = useState<Audio.Sound | null>(null);
     const peerConnectionRef = useRef<PeerConnectionType | null>(null);
@@ -344,7 +344,21 @@ export const useWebRTC = (serverUrl: string) => {
             }
 
             socket.close();
-        }
+        },
+        toggleMic: () => {
+            const localStream = localStreamRef.current;
+            if (localStream) {
+                const audioTrack = localStream.getAudioTracks()[0];
+                if (audioTrack) {
+                    audioTrack.enabled = !audioTrack.enabled;
+                    console.log("Microphone toggled:", audioTrack.enabled);
+                }
+            }
+        },
+        micEnabled: localStreamRef.current
+            ? localStreamRef.current.getAudioTracks()[0].enabled
+            : false,
+        isConnected: isConnectedRef.current,
     } : null;
 
     return customSocket;
