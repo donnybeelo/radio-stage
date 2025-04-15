@@ -9,6 +9,7 @@ import {
 	TouchableOpacity,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import PillButton from "../components/PillButton";
 
 interface ConnectScreenProps {
 	onConnect: (url: string) => void;
@@ -97,7 +98,7 @@ export default function ConnectScreen({
 			{isLoading ? (
 				<ActivityIndicator size="large" color="#0000ff" />
 			) : (
-				<Button title="Connect" onPress={() => handleConnect()} />
+				<PillButton title="Connect" onPress={() => handleConnect()} />
 			)}
 			{recentServers.length > 0 && (
 				<View style={styles.recentServersContainer}>

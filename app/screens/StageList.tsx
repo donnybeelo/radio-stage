@@ -19,6 +19,7 @@ import { useNavigation } from "@react-navigation/native"; // Import navigation h
 import RecordingControls from "../components/RecordingControls";
 import styles from "../styles/StageList.styles";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import PillButton from "../components/PillButton";
 
 interface Stage {
 	path: string;
@@ -121,9 +122,11 @@ const StageList: React.FC<StageListProps> = ({ serverUrl, leave }) => {
 	useLayoutEffect(() => {
 		navigation.setOptions({
 			headerRight: () => (
-				<TouchableOpacity style={styles.leaveFab} onPress={handleLeaveServer}>
-					<Ionicons name="exit-outline" size={24} color="white" />
-				</TouchableOpacity>
+				<PillButton
+					icon="exit-outline"
+					style={styles.leaveFab}
+					onPress={handleLeaveServer}
+				/>
 			),
 		});
 	}, [navigation, handleLeaveServer]); // Added handleLeaveServer to dependencies
@@ -146,12 +149,11 @@ const StageList: React.FC<StageListProps> = ({ serverUrl, leave }) => {
 				)}
 			/>
 
-			<TouchableOpacity
+			<PillButton
+				icon="add"
 				style={styles.fab}
 				onPress={() => setCreateModalVisible(true)}
-			>
-				<Ionicons name="add" size={24} color="white" />
-			</TouchableOpacity>
+			/>
 
 			<Modal
 				visible={isCreateModalVisible}
@@ -171,16 +173,16 @@ const StageList: React.FC<StageListProps> = ({ serverUrl, leave }) => {
 								autoFocus
 							/>
 							<View style={styles.modalButtons}>
-								<Button
+								<PillButton
 									onPress={() => setCreateModalVisible(false)}
-									title="Cancel"
-									color="#F00"
+									text="Cancel"
+									style={{ backgroundColor: "#F00" }}
 								/>
-								<Button
-									title={isCreating ? "Creating..." : "Create"}
+								<PillButton
+									text={isCreating ? "Creating..." : "Create"}
 									onPress={handleCreateStage}
 									disabled={isCreating || !newStageName.trim()}
-									color="#007AFF"
+									style={{ backgroundColor: "#007AFF" }}
 								/>
 							</View>
 						</View>
@@ -196,19 +198,21 @@ const StageList: React.FC<StageListProps> = ({ serverUrl, leave }) => {
 			>
 				<Pressable onPress={handleCloseStage} style={styles.modalOverlay}>
 					<View
-						style={styles.modalContainer}
+						style={styles.modalOverlay}
 						onStartShouldSetResponder={() => true}
 						onTouchEnd={(e) => e.stopPropagation()}
 					>
-						<View style={styles.modalContent}>
-							{selectedStage && (
-								<RecordingControls
-									name={selectedStage.name}
-									serverUrl={selectedStage.url}
-									onClose={handleCloseStage}
-								/>
-							)}
-						</View>
+						<SafeAreaView style={styles.modalContainer}>
+							<View style={styles.modalContent}>
+								{selectedStage && (
+									<RecordingControls
+										name={selectedStage.name}
+										serverUrl={selectedStage.url}
+										onClose={handleCloseStage}
+									/>
+								)}
+							</View>
+						</SafeAreaView>
 					</View>
 				</Pressable>
 			</Modal>

@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useWebRTC } from "../hooks/useWebRTC";
 import styles from "../styles/StageList.styles";
+import PillButton from "./PillButton";
 
 interface RecordingControlsProps {
 	serverUrl: string;
@@ -42,28 +43,25 @@ const RecordingControls: React.FC<RecordingControlsProps> = ({
 	return (
 		<View style={styles.container}>
 			<Text style={styles.modalTitle}>{name}</Text>
-			<TouchableOpacity style={styles.closeButton} onPress={handleClose}>
-				<Ionicons name="close" size={24} color="#fff" />
-			</TouchableOpacity>
+			<PillButton
+				style={styles.closeButton}
+				onPress={handleClose}
+				icon="close"
+			/>
 			<View style={styles.buttonRow}>
 				{!socket?.isConnected && (
-					<TouchableOpacity
-						style={[styles.pillButton, styles.connectButton]}
+					<PillButton
+						style={[styles.connectButton]}
 						onPress={handleConnect}
-					>
-						<Ionicons name="radio" size={24} color="#fff" />
-						<Text style={styles.pillText}>{connectText}</Text>
-					</TouchableOpacity>
+						icon="radio"
+						text={connectText}
+					/>
 				)}
-				<TouchableOpacity
-					style={[
-						styles.circleButton,
-						muted ? styles.unmuteButton : styles.muteButton,
-					]}
+				<PillButton
+					style={[muted ? styles.unmuteButton : styles.muteButton]}
 					onPress={handleToggleMic}
-				>
-					<Ionicons name={muted ? "mic-off" : "mic"} size={24} color="#fff" />
-				</TouchableOpacity>
+					icon={muted ? "mic-off" : "mic"}
+				/>
 			</View>
 		</View>
 	);

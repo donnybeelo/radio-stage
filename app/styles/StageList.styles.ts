@@ -4,9 +4,6 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 	},
-	Button: {
-		borderRadius: 20,
-	},
 	stageItem: {
 		padding: 16,
 		borderBottomWidth: 1,
@@ -26,6 +23,7 @@ const styles = StyleSheet.create({
 		backgroundColor: "white",
 		borderRadius: 10,
 		padding: 20,
+		// minHeight: 150,
 		elevation: 5,
 		boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.25)",
 		borderBottomLeftRadius: 0,
@@ -45,11 +43,6 @@ const styles = StyleSheet.create({
 	buttonDisabled: {
 		backgroundColor: "#cccccc",
 		opacity: 0.7,
-	},
-	buttonText: {
-		color: "#fff",
-		textAlign: "center",
-		fontSize: 16,
 	},
 	modalButtons: {
 		flexDirection: "row",
@@ -88,37 +81,14 @@ const styles = StyleSheet.create({
 		justifyContent: "center",
 		alignItems: "center",
 		elevation: 4,
-		boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.25)",
 	},
 	leaveFab: {
 		width: 40,
 		height: 40,
-		borderRadius: 28,
 		marginRight: 10,
-		backgroundColor: "#FF0000",
+		paddingHorizontal: "auto",
 		justifyContent: "center",
-		alignItems: "center",
-		elevation: 4,
-		boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.25)",
-	},
-	pillText: {
-		color: "#fff",
-		fontSize: 16,
-		marginLeft: 10,
-		textTransform: "uppercase",
-	},
-	leaveButton: {
-		marginTop: 10,
-		padding: 10,
-		backgroundColor: "#FF3B30",
-		borderRadius: 5,
-		alignItems: "center",
-	},
-	leaveButtonText: {
-		color: "#007AFF", // Match the title bar color
-		fontSize: 16,
-		fontWeight: "bold",
-		marginRight: 10, // Add some margin for spacing
+		backgroundColor: "#FF0000",
 	},
 	connectButton: {
 		backgroundColor: "#007AFF",
@@ -135,6 +105,7 @@ const styles = StyleSheet.create({
 		right: 0,
 		backgroundColor: "#FF3B30",
 		borderRadius: 16,
+		paddingHorizontal: "auto",
 		width: 32,
 		height: 32,
 		alignItems: "center",
@@ -144,24 +115,6 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		justifyContent: "center",
 		marginTop: 16,
-	},
-	circleButton: {
-		width: 56,
-		height: 56,
-		borderRadius: 28,
-		alignItems: "center",
-		justifyContent: "center",
-		marginHorizontal: 8,
-	},
-	pillButton: {
-		width: "auto",
-		height: 56,
-		borderRadius: 28,
-		alignItems: "center",
-		flexDirection: "row",
-		paddingHorizontal: 14,
-		marginHorizontal: 8,
-
 	},
 });
 
