@@ -3,7 +3,7 @@ import React, {
 	useState,
 	useLayoutEffect,
 	useCallback,
-} from "react"; // Added useCallback
+} from "react";
 import {
 	View,
 	FlatList,
@@ -11,15 +11,16 @@ import {
 	Text,
 	Modal,
 	TextInput,
-	Button,
 	Pressable,
+	StyleSheet,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native"; // Import navigation hook
+import { useNavigation } from "@react-navigation/native";
 import RecordingControls from "../components/RecordingControls";
 import styles from "../styles/StageList.styles";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import PillButton from "../components/PillButton";
+import { ProfileType } from "./ConnectScreen";
 
 interface Stage {
 	path: string;
@@ -31,6 +32,7 @@ interface Stage {
 interface StageListProps {
 	serverUrl: string;
 	leave: () => void;
+	profileType: ProfileType;
 }
 
 interface StageListItem {
@@ -45,8 +47,12 @@ interface StageResponse {
 	data: Stage[];
 }
 
-const StageList: React.FC<StageListProps> = ({ serverUrl, leave }) => {
-	const navigation = useNavigation(); // Initialize navigation
+const StageList: React.FC<StageListProps> = ({
+	serverUrl,
+	leave,
+	profileType,
+}) => {
+	const navigation = useNavigation();
 	const [stages, setStages] = useState<Stage[]>([]);
 	const [selectedStage, setSelectedStage] = useState<StageListItem | null>(
 		null
@@ -55,12 +61,14 @@ const StageList: React.FC<StageListProps> = ({ serverUrl, leave }) => {
 	const [newStageName, setNewStageName] = useState("");
 	const [isCreating, setIsCreating] = useState(false);
 
+	// Fetch stages periodically
 	useEffect(() => {
 		fetchStages();
-		const intervalId = setInterval(fetchStages, 2000); // Refresh every 2 seconds
-		return () => clearInterval(intervalId); // Cleanup interval on unmount
+		const intervalId = setInterval(fetchStages, 2000);
+		return () => clearInterval(intervalId);
 	}, []);
 
+	// Get available stages from server
 	const fetchStages = async () => {
 		try {
 			const response = await fetch(`${serverUrl}/api/`);
@@ -75,6 +83,7 @@ const StageList: React.FC<StageListProps> = ({ serverUrl, leave }) => {
 		}
 	};
 
+	// Handle stage selection
 	const handleStageSelect = (stage: Stage) => {
 		setSelectedStage({
 			id: stage.path,
@@ -83,6 +92,7 @@ const StageList: React.FC<StageListProps> = ({ serverUrl, leave }) => {
 		});
 	};
 
+	// Create a new stage
 	const handleCreateStage = async () => {
 		if (!newStageName.trim()) return;
 
@@ -112,15 +122,25 @@ const StageList: React.FC<StageListProps> = ({ serverUrl, leave }) => {
 		setSelectedStage(null);
 	};
 
-	const handleLeaveServer = useCallback(() => {
+	// Handle leaving the server
+	const handleLeaveServer = () => {
 		navigation.setOptions({
 			headerRight: null,
-		}); // Remove header button
-		leave(); // Use the passed function to update the state
-	}, [navigation, leave]);
+			headerTitle: "RadioStage",
+		});
+		leave();
+	};
 
+	// Setup header with profile info
 	useLayoutEffect(() => {
+		let headerTitle = "RadioStage";
+		if (profileType === "actor" || profileType === "director") {
+			headerTitle += ` - ${profileType.charAt(0).toUpperCase() + profileType.slice(1)}`;
+		}
+
 		navigation.setOptions({
+			headerTitle: headerTitle,
+			header: undefined,
 			headerRight: () => (
 				<PillButton
 					icon="exit-outline"
@@ -129,10 +149,11 @@ const StageList: React.FC<StageListProps> = ({ serverUrl, leave }) => {
 				/>
 			),
 		});
-	}, [navigation, handleLeaveServer]); // Added handleLeaveServer to dependencies
+	}, [navigation, handleLeaveServer, profileType]);
 
 	return (
 		<SafeAreaView style={styles.container} edges={["top"]}>
+			{/* List of stages */}
 			<FlatList
 				data={stages.sort((a, b) => (a.created_at < b.created_at ? 1 : -1))}
 				keyExtractor={(item) => item.path}
@@ -149,72 +170,73 @@ const StageList: React.FC<StageListProps> = ({ serverUrl, leave }) => {
 				)}
 			/>
 
-			<PillButton
-				icon="add"
-				style={styles.fab}
-				onPress={() => setCreateModalVisible(true)}
-			/>
+			{/* Create Stage button (not for audience) */}
+			{profileType !== "audience" && (
+				<PillButton
+					icon="add"
+					style={styles.fab}
+					onPress={() => setCreateModalVisible(true)}
+				/>
+			)}
 
+			{/* Create Stage Modal */}
 			<Modal
 				visible={isCreateModalVisible}
 				animationType="slide"
 				transparent={true}
 				onRequestClose={() => setCreateModalVisible(false)}
 			>
-				<View style={styles.modalOverlay}>
-					<SafeAreaView style={styles.modalContainer}>
-						<View style={styles.modalContent}>
-							<Text style={styles.modalTitle}>Create New Stage</Text>
-							<TextInput
-								style={styles.input}
-								value={newStageName}
-								onChangeText={setNewStageName}
-								placeholder="Stage Name"
-								autoFocus
+				<View style={styles.modalContainer}>
+					<View style={styles.modalContent}>
+						<Text style={styles.modalTitle}>Create New Stage</Text>
+						<TextInput
+							style={styles.input}
+							value={newStageName}
+							onChangeText={setNewStageName}
+							placeholder="Stage Name"
+							autoFocus
+						/>
+						<View style={styles.modalButtons}>
+							<PillButton
+								onPress={() => setCreateModalVisible(false)}
+								text="Cancel"
+								style={{ backgroundColor: "#F00" }}
 							/>
-							<View style={styles.modalButtons}>
-								<PillButton
-									onPress={() => setCreateModalVisible(false)}
-									text="Cancel"
-									style={{ backgroundColor: "#F00" }}
-								/>
-								<PillButton
-									text={isCreating ? "Creating..." : "Create"}
-									onPress={handleCreateStage}
-									disabled={isCreating || !newStageName.trim()}
-									style={{ backgroundColor: "#007AFF" }}
-								/>
-							</View>
+							<PillButton
+								text={isCreating ? "Creating..." : "Create"}
+								onPress={handleCreateStage}
+								disabled={isCreating || !newStageName.trim()}
+								style={{ backgroundColor: "#007AFF" }}
+							/>
 						</View>
-					</SafeAreaView>
+					</View>
 				</View>
 			</Modal>
 
+			{/* Stage Controls Modal */}
 			<Modal
 				visible={selectedStage !== null}
 				animationType="slide"
 				transparent={true}
 				onRequestClose={handleCloseStage}
+				style={styles.modalContainer}
 			>
-				<Pressable onPress={handleCloseStage} style={styles.modalOverlay}>
+				<View style={styles.modalContainer}>
 					<View
-						style={styles.modalOverlay}
+						style={styles.modalContent}
 						onStartShouldSetResponder={() => true}
 						onTouchEnd={(e) => e.stopPropagation()}
 					>
-						<SafeAreaView style={styles.modalContainer}>
-							<View style={styles.modalContent}>
-								{selectedStage && (
-									<RecordingControls
-										name={selectedStage.name}
-										serverUrl={selectedStage.url}
-										onClose={handleCloseStage}
-									/>
-								)}
-							</View>
-						</SafeAreaView>
+						{selectedStage && (
+							<RecordingControls
+								name={selectedStage.name}
+								serverUrl={selectedStage.url}
+								onClose={handleCloseStage}
+								profileType={profileType}
+							/>
+						)}
 					</View>
-				</Pressable>
+				</View>
 			</Modal>
 		</SafeAreaView>
 	);

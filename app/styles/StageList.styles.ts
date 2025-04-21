@@ -9,15 +9,12 @@ const styles = StyleSheet.create({
 		borderBottomWidth: 1,
 		borderBottomColor: "#eee",
 	},
-	modalOverlay: {
-		flex: 1,
-		backgroundColor: "rgba(0, 0, 0, 0)",
-	},
 	modalContainer: {
 		flex: 1,
 		paddingHorizontal: 20,
 		justifyContent: "flex-end",
 		margin: 0,
+		height: "100%",
 	},
 	modalContent: {
 		backgroundColor: "white",
@@ -115,6 +112,9 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		justifyContent: "center",
 		marginTop: 16,
+	},
+	disconnectButton: {
+		backgroundColor: "#FF3B30",
 	},
 });
 
