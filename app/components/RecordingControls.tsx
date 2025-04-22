@@ -13,26 +13,6 @@ interface RecordingControlsProps {
 	profileType: ProfileType;
 }
 
-// Extra styles specific to this component
-const componentStyles = StyleSheet.create({
-	profileLabel: {
-		fontSize: 14,
-		color: "#666",
-		textAlign: "center",
-		marginBottom: 15,
-	},
-	disabledButton: {
-		backgroundColor: "#ccc",
-		opacity: 0.6,
-	},
-});
-
-// Merge with imported styles
-const mergedStyles = StyleSheet.create({
-	...styles,
-	...componentStyles,
-});
-
 const RecordingControls: React.FC<RecordingControlsProps> = ({
 	serverUrl,
 	onClose,
@@ -70,19 +50,19 @@ const RecordingControls: React.FC<RecordingControlsProps> = ({
 	};
 
 	return (
-		<View style={mergedStyles.container}>
-			<Text style={mergedStyles.modalTitle}>{name}</Text>
+		<View style={{ flex: 1 }}>
+			<Text style={styles.modalTitle}>{name}</Text>
 
 			{/* Close button only when not connected */}
 			{!socket?.isConnected && (
 				<PillButton
-					style={mergedStyles.closeButton}
+					style={styles.closeButton}
 					onPress={onClose!}
 					icon="close"
 				/>
 			)}
 
-			<View style={mergedStyles.buttonRow}>
+			<View style={styles.buttonRow}>
 				{/* Connect/Disconnect button */}
 				<PillButton
 					style={[
@@ -106,7 +86,7 @@ const RecordingControls: React.FC<RecordingControlsProps> = ({
 				{profileType !== "audience" && (
 					<PillButton
 						style={[
-							muted ? mergedStyles.unmuteButton : mergedStyles.muteButton,
+							muted ? styles.unmuteButton : styles.muteButton,
 						]}
 						onPress={handleToggleMic}
 						icon={muted ? "mic-off" : "mic"}

@@ -11,9 +11,8 @@ import {
 	Text,
 	Modal,
 	TextInput,
-	Pressable,
-	StyleSheet,
 } from "react-native";
+import alert from "../components/alert";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import RecordingControls from "../components/RecordingControls";
@@ -118,6 +117,30 @@ const StageList: React.FC<StageListProps> = ({
 		}
 	};
 
+	const handleDeleteStage = async (path: string) => {
+		try {
+			await fetch(`${serverUrl}/api/`, {
+				method: "DELETE",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ path }),
+			});
+			fetchStages();
+		} catch (err) {
+			console.error("Failed to delete stage:", err);
+		}
+	};
+
+	const confirmDeleteStage = (path: string) => {
+		alert("Delete Stage", "Are you sure you want to delete this stage?", [
+			{ text: "Cancel", style: "cancel" },
+			{
+				text: "Delete",
+				style: "destructive",
+				onPress: () => handleDeleteStage(path),
+			},
+		]);
+	};
+
 	const handleCloseStage = () => {
 		setSelectedStage(null);
 	};
@@ -144,7 +167,7 @@ const StageList: React.FC<StageListProps> = ({
 			headerRight: () => (
 				<PillButton
 					icon="exit-outline"
-					style={styles.leaveFab}
+					style={styles.destructiveButton}
 					onPress={handleLeaveServer}
 				/>
 			),
@@ -152,29 +175,47 @@ const StageList: React.FC<StageListProps> = ({
 	}, [navigation, handleLeaveServer, profileType]);
 
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView style={{ flex: 1 }} edges={["top"]}>
 			{/* List of stages */}
 			<FlatList
 				data={stages.sort((a, b) => (a.created_at < b.created_at ? 1 : -1))}
 				keyExtractor={(item) => item.path}
 				renderItem={({ item }) => (
-					<TouchableOpacity
-						style={styles.stageItem}
-						onPress={() => handleStageSelect(item)}
+					<View
+						style={[
+							styles.stageItem,
+							{
+								flexDirection: "row",
+								justifyContent: "space-between",
+								alignItems: "center",
+							},
+						]}
 					>
-						<Text style={styles.stageName}>{item.name}</Text>
-						<Text style={styles.stageInfo}>
-							{`${item.clients.length} connected • Created ${new Date(item.created_at).toLocaleDateString()}`}
-						</Text>
-					</TouchableOpacity>
+						<TouchableOpacity
+							onPress={() => handleStageSelect(item)}
+							style={{ flex: 1 }}
+						>
+							<Text style={styles.stageName}>{item.name}</Text>
+							<Text
+								style={styles.stageInfo}
+							>{`${item.clients.length} connected • Created ${new Date(item.created_at).toLocaleDateString()}`}</Text>
+						</TouchableOpacity>
+						{profileType === "director" && (
+							<PillButton
+								onPress={() => confirmDeleteStage(item.path)}
+								icon="trash-outline"
+								style={styles.destructiveButton}
+							></PillButton>
+						)}
+					</View>
 				)}
 			/>
 
-			{/* Create Stage button (not for audience) */}
-			{profileType !== "audience" && (
+			{/* Create Stage button (director only) */}
+			{profileType === "director" && (
 				<PillButton
 					icon="add"
-					style={styles.fab}
+					style={styles.createStage}
 					onPress={() => setCreateModalVisible(true)}
 				/>
 			)}
@@ -195,6 +236,7 @@ const StageList: React.FC<StageListProps> = ({
 							onChangeText={setNewStageName}
 							placeholder="Stage Name"
 							autoFocus
+							onSubmitEditing={handleCreateStage}
 						/>
 						<View style={styles.modalButtons}>
 							<PillButton

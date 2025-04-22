@@ -1,13 +1,13 @@
 import { StyleSheet } from 'react-native';
 
 const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-	},
 	stageItem: {
 		padding: 16,
 		borderBottomWidth: 1,
 		borderBottomColor: "#eee",
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
 	},
 	modalContainer: {
 		flex: 1,
@@ -26,20 +26,6 @@ const styles = StyleSheet.create({
 		borderBottomLeftRadius: 0,
 		borderBottomRightRadius: 0,
 		maxWidth: 400,
-	},
-	button: {
-		paddingVertical: 10,
-		paddingHorizontal: 20,
-		borderRadius: 5,
-		minWidth: 100,
-		backgroundColor: "#ccc",
-	},
-	buttonPrimary: {
-		backgroundColor: "#007AFF",
-	},
-	buttonDisabled: {
-		backgroundColor: "#cccccc",
-		opacity: 0.7,
 	},
 	modalButtons: {
 		flexDirection: "row",
@@ -67,28 +53,22 @@ const styles = StyleSheet.create({
 		color: "#666",
 		marginTop: 4,
 	},
-	fab: {
+	createStage: {
 		position: "absolute",
 		right: 20,
 		bottom: 20,
-		width: 56,
-		height: 56,
-		borderRadius: 28,
-		backgroundColor: "#007AFF",
-		justifyContent: "center",
-		alignItems: "center",
-		elevation: 4,
 	},
-	leaveFab: {
-		width: 40,
+	destructiveButton: {
 		height: 40,
 		marginRight: 10,
-		paddingHorizontal: "auto",
 		justifyContent: "center",
 		backgroundColor: "#FF0000",
 	},
 	connectButton: {
 		backgroundColor: "#007AFF",
+	},
+	disconnectButton: {
+		backgroundColor: "#FF3B30",
 	},
 	muteButton: {
 		backgroundColor: "#FF9500",
@@ -112,9 +92,6 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		justifyContent: "center",
 		marginTop: 16,
-	},
-	disconnectButton: {
-		backgroundColor: "#FF3B30",
 	},
 });
 
