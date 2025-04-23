@@ -3,6 +3,7 @@ import React, {
 	useState,
 	useLayoutEffect,
 	useCallback,
+	useRef,
 } from "react";
 import {
 	View,
@@ -11,13 +12,12 @@ import {
 	Text,
 	Modal,
 	TextInput,
+	Animated,
 } from "react-native";
-import alert from "../components/alert";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import RecordingControls from "../components/RecordingControls";
 import styles from "../styles/StageList.styles";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import PillButton from "../components/PillButton";
 import { ProfileType } from "./ConnectScreen";
 
@@ -56,8 +56,12 @@ const StageList: React.FC<StageListProps> = ({
 	const [selectedStage, setSelectedStage] = useState<StageListItem | null>(
 		null
 	);
+	const [stageToDelete, setStageToDelete] = useState<Stage | null>(null);
 	const [isCreateModalVisible, setCreateModalVisible] = useState(false);
 	const [newStageName, setNewStageName] = useState("");
+	const [createStageErrorMessage, setCreateStageErrorMessage] = useState<
+		string | null
+	>(null);
 	const [isCreating, setIsCreating] = useState(false);
 
 	// Fetch stages periodically
@@ -84,6 +88,7 @@ const StageList: React.FC<StageListProps> = ({
 
 	// Handle stage selection
 	const handleStageSelect = (stage: Stage) => {
+		fadeIn();
 		setSelectedStage({
 			id: stage.path,
 			name: stage.name,
@@ -93,7 +98,12 @@ const StageList: React.FC<StageListProps> = ({
 
 	// Create a new stage
 	const handleCreateStage = async () => {
+		setCreateStageErrorMessage(null);
 		if (!newStageName.trim()) return;
+		if (stages.some((stage) => stage.name === newStageName)) {
+			setCreateStageErrorMessage("Stage name already exists.");
+			return;
+		}
 
 		setIsCreating(true);
 		try {
@@ -106,6 +116,7 @@ const StageList: React.FC<StageListProps> = ({
 			});
 
 			if (response.ok) {
+				fadeOut();
 				setCreateModalVisible(false);
 				setNewStageName("");
 				fetchStages();
@@ -128,21 +139,21 @@ const StageList: React.FC<StageListProps> = ({
 		} catch (err) {
 			console.error("Failed to delete stage:", err);
 		}
+		handleCloseModal();
 	};
 
-	const confirmDeleteStage = (path: string) => {
-		alert("Delete Stage", "Are you sure you want to delete this stage?", [
-			{ text: "Cancel", style: "cancel" },
-			{
-				text: "Delete",
-				style: "destructive",
-				onPress: () => handleDeleteStage(path),
-			},
-		]);
-	};
-
-	const handleCloseStage = () => {
+	const handleCloseModal = () => {
 		setSelectedStage(null);
+		setCreateStageErrorMessage(null);
+		setNewStageName("");
+		setCreateModalVisible(false);
+		setStageToDelete(null);
+		fadeOut();
+	};
+
+	const confirmDeleteStage = (stage: Stage) => {
+		setStageToDelete(stage);
+		fadeIn();
 	};
 
 	// Handle leaving the server
@@ -152,6 +163,30 @@ const StageList: React.FC<StageListProps> = ({
 			headerTitle: "RadioStage",
 		});
 		leave();
+	};
+	const handleOpenCreateModal = (): void => {
+		setCreateModalVisible(true);
+		fadeIn();
+	};
+
+	const fadeAnim = useRef(new Animated.Value(0)).current;
+
+	const fadeIn = () => {
+		// Will change fadeAnim value to 1 in 5 seconds
+		Animated.timing(fadeAnim, {
+			toValue: 1,
+			duration: 400,
+			useNativeDriver: true,
+		}).start();
+	};
+
+	const fadeOut = () => {
+		// Will change fadeAnim value to 0 in 3 seconds
+		Animated.timing(fadeAnim, {
+			toValue: 0,
+			duration: 150,
+			useNativeDriver: true,
+		}).start();
 	};
 
 	// Setup header with profile info
@@ -167,7 +202,7 @@ const StageList: React.FC<StageListProps> = ({
 			headerRight: () => (
 				<PillButton
 					icon="exit-outline"
-					style={styles.destructiveButton}
+					style={[styles.destructiveButton, { boxShadow: null }]}
 					onPress={handleLeaveServer}
 				/>
 			),
@@ -202,7 +237,7 @@ const StageList: React.FC<StageListProps> = ({
 						</TouchableOpacity>
 						{profileType === "director" && (
 							<PillButton
-								onPress={() => confirmDeleteStage(item.path)}
+								onPress={() => confirmDeleteStage(item)}
 								icon="trash-outline"
 								style={styles.destructiveButton}
 							></PillButton>
@@ -216,16 +251,19 @@ const StageList: React.FC<StageListProps> = ({
 				<PillButton
 					icon="add"
 					style={styles.createStage}
-					onPress={() => setCreateModalVisible(true)}
+					onPress={handleOpenCreateModal}
 				/>
 			)}
+
+			{/* Overlay for modals */}
+			<Animated.View style={[styles.overlay, { opacity: fadeAnim }]} />
 
 			{/* Create Stage Modal */}
 			<Modal
 				visible={isCreateModalVisible}
 				animationType="slide"
 				transparent={true}
-				onRequestClose={() => setCreateModalVisible(false)}
+				onRequestClose={handleCloseModal}
 			>
 				<View style={styles.modalContainer}>
 					<View style={styles.modalContent}>
@@ -238,9 +276,21 @@ const StageList: React.FC<StageListProps> = ({
 							autoFocus
 							onSubmitEditing={handleCreateStage}
 						/>
+						{createStageErrorMessage && (
+							<Text
+								style={{
+									color: "red",
+									textAlign: "center",
+								}}
+							>
+								{createStageErrorMessage}
+							</Text>
+						)}
+
+						{/* Buttons */}
 						<View style={styles.modalButtons}>
 							<PillButton
-								onPress={() => setCreateModalVisible(false)}
+								onPress={handleCloseModal}
 								text="Cancel"
 								style={{ backgroundColor: "#F00" }}
 							/>
@@ -260,7 +310,6 @@ const StageList: React.FC<StageListProps> = ({
 				visible={selectedStage !== null}
 				animationType="slide"
 				transparent={true}
-				onRequestClose={handleCloseStage}
 				style={styles.modalContainer}
 			>
 				<View style={styles.modalContainer}>
@@ -273,10 +322,34 @@ const StageList: React.FC<StageListProps> = ({
 							<RecordingControls
 								name={selectedStage.name}
 								serverUrl={selectedStage.url}
-								onClose={handleCloseStage}
+								onClose={handleCloseModal}
 								profileType={profileType}
 							/>
 						)}
+					</View>
+				</View>
+			</Modal>
+			{/* Confirm Delete Stage Modal */}
+			<Modal
+				visible={stageToDelete !== null}
+				animationType="fade"
+				transparent={true}
+				onRequestClose={handleCloseModal}
+			>
+				<View style={styles.modalContainerCentred}>
+					<View style={styles.modalContentCentred}>
+						<Text style={styles.modalTitle}>Confirm Deletion</Text>
+						<Text style={{ textAlign: "center" }}>
+							Are you sure you want to delete the stage '{stageToDelete?.name}'?
+						</Text>
+						<View style={[styles.modalButtons, { marginTop: 20 }]}>
+							<PillButton onPress={handleCloseModal} text="Cancel" />
+							<PillButton
+								text="Delete"
+								onPress={() => handleDeleteStage(stageToDelete!.path)}
+								style={styles.destructiveButton}
+							/>
+						</View>
 					</View>
 				</View>
 			</Modal>

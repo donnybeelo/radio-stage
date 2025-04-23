@@ -10,6 +10,7 @@ interface PillButtonProps {
 	style?: object;
 	disabled?: boolean;
 	title?: string;
+	customText?: React.ReactNode;
 }
 
 const PillButton: React.FC<PillButtonProps> = ({
@@ -20,6 +21,7 @@ const PillButton: React.FC<PillButtonProps> = ({
 	style,
 	disabled,
 	title,
+	customText,
 }) => {
 	text = text || title; // Use title if text is not provided
 	let textColour = "#fff";
@@ -29,6 +31,17 @@ const PillButton: React.FC<PillButtonProps> = ({
 		textColour = "#000";
 	}
 
+	if (customText) {
+		return (
+			<TouchableOpacity
+				style={[styles.iconCustomButton, style, disabled && styles.disabled]}
+				onPress={onPress}
+				disabled={disabled}
+			>
+				{customText}
+			</TouchableOpacity>
+		);
+	}
 	if (!icon && !text) {
 		throw new Error(
 			'PillButton requires at least one of "icon" or "text" to be provided.'
@@ -89,6 +102,16 @@ const styleBase = StyleSheet.create({
 
 const styles = StyleSheet.create({
 	iconTextButton: styleBase.buttonBase,
+	iconCustomButton: {
+		...StyleSheet.flatten([
+			styleBase.buttonBase,
+			{
+				height: "auto",
+				width: "auto",
+				padding: 5,
+			},
+		]),
+	},
 	iconButton: {
 		...StyleSheet.flatten([
 			styleBase.buttonBase,

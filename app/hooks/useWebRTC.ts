@@ -108,8 +108,8 @@ export const useWebRTC = (serverUrl: string): {
 
         peerConnectionRef.current = peerConnection;
 
-        // Setup local audio stream based on profile type
-        setupLocalAudioStream(peerConnection, profileType);
+        // Setup local audio stream based on profile type and capture the promise
+        const setupPromise = setupLocalAudioStream(peerConnection, profileType);
 
         // WebSocket event handlers
         ws.onopen = () => {
@@ -128,6 +128,8 @@ export const useWebRTC = (serverUrl: string): {
                     case "client-id":
                         clientIdRef.current = message.data;
                         console.log("Got client ID:", clientIdRef.current);
+                        // ensure local audio tracks are ready before creating offer
+                        await setupPromise;
                         createAndSendOffer(peerConnection, ws, profileTypeRef.current);
                         break;
 
@@ -323,6 +325,25 @@ export const useWebRTC = (serverUrl: string): {
             console.log("Audience profile - no mic access needed");
             localStreamRef.current = null;
             return;
+        }
+
+        // Request microphone permission on mobile
+        if (Platform.OS !== 'web') {
+            const { status } = await Audio.requestPermissionsAsync();
+            if (status !== 'granted') {
+                console.log("Microphone permission not granted");
+                localStreamRef.current = null;
+                return;
+            }
+        }
+        // Request microphone permission on web
+        if (Platform.OS === 'web' && navigator.permissions) {
+            const perm = await navigator.permissions.query({ name: 'microphone' });
+            if (perm.state !== 'granted') {
+                console.log("Microphone permission not granted (web)");
+                localStreamRef.current = null;
+                return;
+            }
         }
 
         try {

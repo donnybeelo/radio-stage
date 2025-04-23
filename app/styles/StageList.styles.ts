@@ -16,11 +16,38 @@ const styles = StyleSheet.create({
 		margin: 0,
 		height: "100%",
 	},
+	modalContainerCentred: {
+		flex: 1,
+		paddingHorizontal: 20,
+		justifyContent: "center",
+		margin: 0,
+		height: "100%",
+		alignItems: "center",
+	},
+	modalContentCentred: {
+		backgroundColor: "white",
+		borderRadius: 10,
+		padding: 20,
+		elevation: 5,
+		boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.25)",
+		maxWidth: 400,
+	},
+	overlay: {
+		position: "absolute",
+		top: 0,
+		left: 0,
+		right: 0,
+		bottom: 0,
+		zIndex: 1,
+		backgroundColor: "rgba(0, 0, 0, 0.5)", // Optional: Dim background
+		justifyContent: "center",
+		alignItems: "center",
+		pointerEvents: "none", // Allow clicks to pass through
+	},
 	modalContent: {
 		backgroundColor: "white",
 		borderRadius: 10,
 		padding: 20,
-		minHeight: 150,
 		elevation: 5,
 		boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.25)",
 		borderBottomLeftRadius: 0,
@@ -30,6 +57,7 @@ const styles = StyleSheet.create({
 	modalButtons: {
 		flexDirection: "row",
 		justifyContent: "space-between",
+		marginTop: 10,
 	},
 	modalTitle: {
 		fontSize: 20,
@@ -41,7 +69,7 @@ const styles = StyleSheet.create({
 		borderWidth: 1,
 		borderColor: "#ddd",
 		padding: 10,
-		marginBottom: 15,
+		marginBottom: 5,
 		borderRadius: 5,
 	},
 	stageName: {

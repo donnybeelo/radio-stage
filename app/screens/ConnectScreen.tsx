@@ -103,6 +103,7 @@ export default function ConnectScreen({
 				autoCapitalize="none"
 				autoCorrect={false}
 				editable={!isLoading}
+				onSubmitEditing={() => handleConnect()}
 			/>
 
 			{/* Profile selection */}
@@ -137,9 +138,18 @@ export default function ConnectScreen({
 
 			{error && <Text style={styles.error}>{error}</Text>}
 			{isLoading ? (
-				<ActivityIndicator size="large" color="#0000ff" />
+				<PillButton
+					customText={<ActivityIndicator size={30} color="#007AFF" />}
+					style={{ width: "80%", alignSelf: "center" }}
+					onPress={() => handleConnect()}
+					disabled
+				/>
 			) : (
-				<PillButton title="Connect" onPress={() => handleConnect()} />
+				<PillButton
+					title="Connect"
+					style={{ width: "80%", alignSelf: "center" }}
+					onPress={() => handleConnect()}
+				/>
 			)}
 			{recentServers.length > 0 && (
 				<View style={styles.recentServersContainer}>
@@ -166,8 +176,9 @@ const styles = StyleSheet.create({
 		flex: 1,
 		justifyContent: "center",
 		padding: 20,
-		width: 300,
-		marginHorizontal: "auto",
+		maxWidth: 400,
+		alignSelf: "center",
+		width: "100%",
 	},
 	title: {
 		fontSize: 24,
