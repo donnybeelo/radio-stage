@@ -1,7 +1,6 @@
-import React, { useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { useWebRTC } from "../hooks/useWebRTC";
+import React, { useState } from "react";
+import { View, Text } from "react-native";
+import useWebRTC from "../hooks/useWebRTC";
 import styles from "../styles/StageList.styles";
 import PillButton from "./PillButton";
 import { ProfileType } from "../screens/ConnectScreen";
@@ -21,8 +20,8 @@ const RecordingControls: React.FC<RecordingControlsProps> = ({
 }) => {
 	const webRTCSocket = useWebRTC(serverUrl);
 	const socket = webRTCSocket.customSocket;
-	const [muted, setMuted] = React.useState(profileType === "audience");
-	const [connecting, setConnecting] = React.useState(false);
+	const [muted, setMuted] = useState(profileType === "audience");
+	const [connecting, setConnecting] = useState(false);
 
 	const handleToggleMic = () => {
 		// Audience can't unmute
@@ -50,7 +49,7 @@ const RecordingControls: React.FC<RecordingControlsProps> = ({
 	};
 
 	return (
-		<View style={{ flex: 1 }}>
+		<>
 			<Text style={styles.modalTitle}>{name}</Text>
 
 			{/* Close button only when not connected */}
@@ -85,15 +84,13 @@ const RecordingControls: React.FC<RecordingControlsProps> = ({
 				{/* Mic toggle - only for non-audience */}
 				{profileType !== "audience" && (
 					<PillButton
-						style={[
-							muted ? styles.unmuteButton : styles.muteButton,
-						]}
+						style={muted ? styles.unmuteButton : styles.muteButton}
 						onPress={handleToggleMic}
 						icon={muted ? "mic-off" : "mic"}
 					/>
 				)}
 			</View>
-		</View>
+		</>
 	);
 };
 

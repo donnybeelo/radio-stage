@@ -175,7 +175,7 @@ const StageList: React.FC<StageListProps> = ({
 		// Will change fadeAnim value to 1 in 5 seconds
 		Animated.timing(fadeAnim, {
 			toValue: 1,
-			duration: 400,
+			duration: 250,
 			useNativeDriver: true,
 		}).start();
 	};
@@ -212,6 +212,12 @@ const StageList: React.FC<StageListProps> = ({
 	return (
 		<SafeAreaView style={{ flex: 1 }} edges={["top"]}>
 			{/* List of stages */}
+			{stages.length === 0 && (
+				<Text style={{ padding: 10 }}>
+					No stages available.
+					{profileType === "director" && " Create a new stage to get started!"}
+				</Text>
+			)}
 			<FlatList
 				data={stages.sort((a, b) => (a.created_at < b.created_at ? 1 : -1))}
 				keyExtractor={(item) => item.path}
