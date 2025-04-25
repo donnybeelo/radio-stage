@@ -198,7 +198,6 @@ const StageList: React.FC<StageListProps> = ({
 
 		navigation.setOptions({
 			headerTitle: headerTitle,
-			header: undefined,
 			headerRight: () => (
 				<PillButton
 					icon="exit-outline"

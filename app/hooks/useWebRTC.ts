@@ -149,7 +149,6 @@ export const useWebRTC = (serverUrl: string): {
 
                         await peerConnection.setRemoteDescription(answerDesc);
                         console.log("Remote description set");
-                        setIsConnected(true);
                         break;
 
                     case "ice-candidate":
@@ -217,6 +216,7 @@ export const useWebRTC = (serverUrl: string): {
             if (peerConnection.iceConnectionState === 'connected' ||
                 peerConnection.iceConnectionState === 'completed') {
                 console.log("WebRTC connection established");
+                setIsConnected(true);
             }
         };
 
