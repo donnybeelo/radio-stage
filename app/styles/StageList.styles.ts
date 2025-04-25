@@ -39,9 +39,7 @@ const styles = StyleSheet.create({
 		right: 0,
 		bottom: 0,
 		zIndex: 1,
-		backgroundColor: "rgba(0, 0, 0, 0.5)", // Optional: Dim background
-		justifyContent: "center",
-		alignItems: "center",
+		backgroundColor: "rgba(0, 0, 0, 0.5)",
 		pointerEvents: "none", // Allow clicks to pass through
 	},
 	modalContent: {
