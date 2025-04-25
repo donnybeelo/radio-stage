@@ -93,16 +93,16 @@ const styles = StyleSheet.create({
 		backgroundColor: "#FF0000",
 	},
 	connectButton: {
-		backgroundColor: "#007AFF",
+		backgroundColor: "#00AA00",
 	},
 	disconnectButton: {
 		backgroundColor: "#FF3B30",
 	},
 	muteButton: {
-		backgroundColor: "#FF9500",
+		backgroundColor: "#007AFF",
 	},
 	unmuteButton: {
-		backgroundColor: "#34C759",
+		backgroundColor: "#FF9500",
 	},
 	closeButton: {
 		position: "absolute",
