@@ -217,6 +217,18 @@ export const useWebRTC = (serverUrl: string): {
                 peerConnection.iceConnectionState === 'completed') {
                 console.log("WebRTC connection established");
                 setIsConnected(true);
+            } else if (peerConnection.iceConnectionState === 'disconnected' ||
+                peerConnection.iceConnectionState === 'failed') {
+                console.log("WebRTC connection failed");
+                setIsConnected(false);
+                if (ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({
+                        type: "disconnect",
+                        from: clientIdRef.current
+                    }));
+                }
+                peerConnection.close();
+                peerConnectionRef.current = null;
             }
         };
 
