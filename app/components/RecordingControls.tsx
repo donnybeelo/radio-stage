@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text } from "react-native";
 import useWebRTC from "../hooks/useWebRTC";
 import styles from "../styles/StageList.styles";
@@ -47,6 +47,14 @@ const RecordingControls: React.FC<RecordingControlsProps> = ({
 		socket?.close();
 		setConnecting(false);
 	};
+
+	useEffect(() => {
+		if (
+			webRTCSocket.connectionState === "failed" ||
+			webRTCSocket.connectionState === "disconnected"
+		)
+			setConnecting(false);
+	}, [webRTCSocket.connectionState]);
 
 	return (
 		<>

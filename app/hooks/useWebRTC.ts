@@ -27,11 +27,13 @@ interface CustomSocket {
 export const useWebRTC = (serverUrl: string): {
     customSocket: CustomSocket | null;
     connect: (mute: boolean, profileType: ProfileType) => void;
-    toggleMic: () => void
+    toggleMic: () => void;
+    connectionState: string | null;
 } => {
     const [socket, setSocket] = useState<WebSocket | null>(null);
     const [sound, setSound] = useState<Audio.Sound | null>(null);
     const [isConnected, setIsConnected] = useState<boolean>(false);
+    const [connectionState, setConnectionState] = useState<string | null>(null);
     const mutedRef = useRef(false);
     const peerConnectionRef = useRef<PeerConnectionType | null>(null);
     const clientIdRef = useRef<string | null>(null);
@@ -56,6 +58,13 @@ export const useWebRTC = (serverUrl: string): {
             }
         }
     }, []);
+
+    // Get connection state
+    useEffect(() => {
+        if (peerConnectionRef.current) {
+            setConnectionState(peerConnectionRef.current.iceConnectionState);
+        }
+    }, [peerConnectionRef.current?.iceConnectionState]);
 
     // Initialize WebRTC connection with the server
     const connect = useCallback((mute: boolean, profileType: ProfileType) => {
@@ -95,15 +104,19 @@ export const useWebRTC = (serverUrl: string): {
 
         // Create peer connection
         let peerConnection: PeerConnectionType;
-        if (Platform.OS === 'web') {
-            peerConnection = new RTCPeerConnection(configuration);
-        } else {
-            if (WebRTCModules.RTCPeerConnection) {
-                peerConnection = new WebRTCModules.RTCPeerConnection(configuration);
+        try {
+            if (Platform.OS === 'web') {
+                peerConnection = new RTCPeerConnection(configuration);
             } else {
-                console.error("RTCPeerConnection is not available on this platform");
-                return;
+                if (WebRTCModules.RTCPeerConnection) {
+                    peerConnection = new WebRTCModules.RTCPeerConnection(configuration);
+                } else {
+                    throw new Error("RTCPeerConnection is not available on this platform");
+                }
             }
+        } catch (error) {
+            console.error("Error creating PeerConnection:", error);
+            return;
         }
 
         peerConnectionRef.current = peerConnection;
@@ -227,8 +240,6 @@ export const useWebRTC = (serverUrl: string): {
                         from: clientIdRef.current
                     }));
                 }
-                peerConnection.close();
-                peerConnectionRef.current = null;
             }
         };
 
@@ -426,7 +437,7 @@ export const useWebRTC = (serverUrl: string): {
         isConnected: isConnected,
     } : null;
 
-    return { customSocket, connect, toggleMic };
+    return { customSocket, connect, toggleMic, connectionState };
 };
 
 export default useWebRTC;
